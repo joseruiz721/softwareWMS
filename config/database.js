@@ -55,6 +55,124 @@ const initializeDatabase = async () => {
             )
         `);
         console.log('✅ Tabla session creada/verificada');
+        // Crear tablas de dispositivos y datos auxiliares que la app espera
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS ordenadores (
+                id SERIAL PRIMARY KEY,
+                ip VARCHAR(45),
+                ubicacion VARCHAR(100),
+                activo VARCHAR(50),
+                serial VARCHAR(100) UNIQUE,
+                estado VARCHAR(50),
+                fecha_ingreso DATE,
+                observaciones TEXT,
+                id_usuario_responsable INTEGER REFERENCES usuarios(id),
+                marca VARCHAR(100),
+                activo_fijo VARCHAR(100)
+            )
+        `);
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS access_point (
+                id SERIAL PRIMARY KEY,
+                ip VARCHAR(45),
+                ubicacion VARCHAR(100),
+                serial VARCHAR(100) UNIQUE,
+                modelo VARCHAR(100),
+                version VARCHAR(100),
+                arquitectura VARCHAR(100),
+                mac VARCHAR(100),
+                estado VARCHAR(50),
+                fecha_ingreso DATE,
+                observacion TEXT,
+                id_usuarios_responsable INTEGER REFERENCES usuarios(id),
+                activo_fijo VARCHAR(100)
+            )
+        `);
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS readers (
+                id SERIAL PRIMARY KEY,
+                ip VARCHAR(45),
+                ubicacion VARCHAR(100),
+                no_maquina VARCHAR(100),
+                serial VARCHAR(100) UNIQUE,
+                mac VARCHAR(100),
+                estado VARCHAR(50),
+                fecha_ingreso DATE,
+                observaciones TEXT,
+                id_usuario_responsable INTEGER REFERENCES usuarios(id),
+                activo_fijo VARCHAR(100)
+            )
+        `);
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS etiquetadoras (
+                id SERIAL PRIMARY KEY,
+                ip VARCHAR(45),
+                ubicacion VARCHAR(100),
+                activo VARCHAR(50),
+                serial VARCHAR(100) UNIQUE,
+                modelo VARCHAR(100),
+                serial_aplicador VARCHAR(100),
+                mac VARCHAR(100),
+                estado VARCHAR(50),
+                fecha_ingreso DATE,
+                observaciones TEXT,
+                id_usuarios_responsable INTEGER REFERENCES usuarios(id),
+                activo_fijo VARCHAR(100)
+            )
+        `);
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS tablets (
+                id SERIAL PRIMARY KEY,
+                ip VARCHAR(45),
+                ubicacion VARCHAR(100),
+                no_maquina VARCHAR(100),
+                activo VARCHAR(50),
+                serial VARCHAR(100) UNIQUE,
+                estado VARCHAR(50),
+                fecha_ingreso DATE,
+                observaciones TEXT,
+                id_usuario_responsable INTEGER REFERENCES usuarios(id),
+                activo_fijo VARCHAR(100)
+            )
+        `);
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS lectores_qr (
+                id SERIAL PRIMARY KEY,
+                ubicacion VARCHAR(100),
+                activo VARCHAR(50),
+                modelo VARCHAR(100),
+                estado VARCHAR(50),
+                fecha_ingreso DATE,
+                observaciones TEXT,
+                id_usuarios_responsable INTEGER REFERENCES usuarios(id),
+                activo_fijo VARCHAR(100)
+            )
+        `);
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS repuestos (
+                id SERIAL PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                codigo VARCHAR(50) UNIQUE,
+                cantidad INTEGER DEFAULT 0,
+                stock_minimo INTEGER DEFAULT 5,
+                ubicacion VARCHAR(100),
+                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS mantenimientos (
+                id SERIAL PRIMARY KEY,
+                descripcion TEXT NOT NULL,
+                tipo VARCHAR(50),
+                estado VARCHAR(50),
+                fecha DATE,
+                id_usuarios INTEGER REFERENCES usuarios(id),
+                id_dispositivo INTEGER,
+                tipo_dispositivo VARCHAR(50),
+                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
         
         // Insertar usuario administrador
         // Nota: algunas instalaciones antiguas podrían usar la columna `password` (en inglés).
