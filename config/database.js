@@ -33,16 +33,16 @@ const initializeDatabase = async () => {
         // Crear tabla usuarios
         await pool.query(`
             CREATE TABLE IF NOT EXISTS usuarios (
-                id SERIAL PRIMARY KEY,
-                cedula VARCHAR(20) UNIQUE NOT NULL,
-                nombre VARCHAR(100) NOT NULL,
-                correo VARCHAR(100) UNIQUE NOT NULL,
-                contrasena VARCHAR(255) NOT NULL,
-                role VARCHAR(20) DEFAULT 'user',
-                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                reset_token VARCHAR(255),
-                reset_token_expires TIMESTAMP
-            )
+                    id SERIAL PRIMARY KEY,
+                    cedula VARCHAR(20) UNIQUE NOT NULL,
+                    nombre VARCHAR(100) NOT NULL,
+                    correo VARCHAR(100) UNIQUE NOT NULL,
+                    contrasena VARCHAR(255) NOT NULL,
+                    role VARCHAR(20) DEFAULT 'user',
+                    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    reset_token VARCHAR(255),
+                    reset_token_expires TIMESTAMP
+                )
         `);
         console.log('✅ Tabla usuarios creada/verificada');
         
@@ -57,6 +57,32 @@ const initializeDatabase = async () => {
         console.log('✅ Tabla session creada/verificada');
         
         // Insertar usuario administrador
+        // Nota: algunas instalaciones antiguas podrían usar la columna `password` (en inglés).
+        // Si la tabla existe pero no tiene `contrasena`, intentamos crearla y copiar valores desde `password`.
+        try {
+            // Verificar columnas existentes
+            const cols = await pool.query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name IN ('password','contrasena')`);
+            const colNames = cols.rows.map(r => r.column_name);
+
+            const hasPassword = colNames.includes('password');
+            const hasContrasena = colNames.includes('contrasena');
+
+            if (!hasContrasena) {
+                console.log('ℹ️ Tabla usuarios existe pero falta columna `contrasena`. La crearé.');
+                await pool.query(`ALTER TABLE usuarios ADD COLUMN contrasena VARCHAR(255);`);
+
+                if (hasPassword) {
+                    // Copiar valores desde password -> contrasena (sin eliminar password)
+                    console.log('🔁 Copiando valores desde `password` a `contrasena`...');
+                    const copyResult = await pool.query(`UPDATE usuarios SET contrasena = password WHERE contrasena IS NULL AND password IS NOT NULL RETURNING id, correo`);
+                    console.log(`✅ Filas copiadas: ${copyResult.rowCount}`);
+                }
+            }
+        } catch (mErr) {
+            console.error('❌ Error comprobando/migrando columnas de usuarios:', mErr.message);
+            // No abortamos: la inserción de admin intentará llevarse a cabo y fallará si la columna no existe
+        }
+
         const result = await pool.query(`
             INSERT INTO usuarios (cedula, nombre, correo, contrasena, role) 
             VALUES ($1, $2, $3, $4, $5) 

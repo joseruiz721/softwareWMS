@@ -14,7 +14,7 @@ async function createTables() {
     console.log('🔗 Conectando a la base de datos...');
     client = await pool.connect();
     
-    console.log('📊 Creando tabla usuarios...');
+    console.log('📊 Creando tabla usuarios si no existe...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id SERIAL PRIMARY KEY,
@@ -28,6 +28,27 @@ async function createTables() {
         reset_token_expires TIMESTAMP
       )
     `);
+
+    // Si la columna contrasena no existe (tabla existente con antigua columna 'password'), crear y copiar
+    try {
+      const cols = await client.query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name IN ('password','contrasena')`);
+      const present = cols.rows.map(r => r.column_name);
+      const hasPassword = present.includes('password');
+      const hasContrasena = present.includes('contrasena');
+
+      if (!hasContrasena) {
+        console.log('ℹ️ Añadiendo columna `contrasena` a tabla usuarios...');
+        await client.query(`ALTER TABLE usuarios ADD COLUMN contrasena VARCHAR(255);`);
+
+        if (hasPassword) {
+          console.log('🔁 Copiando valores desde `password` a `contrasena`...');
+          const copyRes = await client.query(`UPDATE usuarios SET contrasena = password WHERE contrasena IS NULL AND password IS NOT NULL RETURNING id, correo`);
+          console.log(`✅ Filas copiadas: ${copyRes.rowCount}`);
+        }
+      }
+    } catch (err) {
+      console.error('❌ Error al comprobar/migrar columnas usuarios:', err.message);
+    }
     
     console.log('📊 Creando tabla session...');
     await client.query(`
