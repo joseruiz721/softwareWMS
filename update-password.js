@@ -18,7 +18,7 @@ async function updatePassword() {
     // Actualizar el usuario en la base de datos
     const result = await pool.query(`
       UPDATE usuarios 
-      SET password = $1 
+      SET contrasena = $1 
       WHERE correo = $2 
       RETURNING id, nombre, correo, role
     `, [hashedPassword, 'joseraulruizreal@gmail.com']);

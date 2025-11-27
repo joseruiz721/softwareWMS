@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     cedula VARCHAR(20) UNIQUE NOT NULL,
     nombre VARCHAR(100) NOT NULL,
     correo VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
+    contrasena VARCHAR(255) NOT NULL,
     role VARCHAR(20) DEFAULT 'user',
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reset_token VARCHAR(255),
@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS mantenimientos (
 
 -- Insertar usuario administrador por defecto
 -- Contraseña: 'password' (hasheada con bcrypt)
-INSERT INTO usuarios (cedula, nombre, correo, password, role) 
+INSERT INTO usuarios (cedula, nombre, correo, contrasena, role) 
 VALUES (
     '12345678', 
     'Administrador Principal', 

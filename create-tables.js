@@ -21,7 +21,7 @@ async function createTables() {
         cedula VARCHAR(20) UNIQUE NOT NULL,
         nombre VARCHAR(100) NOT NULL,
         correo VARCHAR(100) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
+        contrasena VARCHAR(255) NOT NULL,
         role VARCHAR(20) DEFAULT 'user',
         fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         reset_token VARCHAR(255),
@@ -40,7 +40,7 @@ async function createTables() {
     
     console.log('👤 Insertando usuario administrador...');
     const result = await client.query(`
-      INSERT INTO usuarios (cedula, nombre, correo, password, role) 
+      INSERT INTO usuarios (cedula, nombre, correo, contrasena, role) 
       VALUES ($1, $2, $3, $4, $5) 
       ON CONFLICT (correo) DO NOTHING
       RETURNING id, nombre, correo, role
@@ -65,7 +65,7 @@ async function createTables() {
     console.log('\n🎉 ¡TABLAS CREADAS EXITOSAMENTE!');
     console.log('📧 Ahora puedes hacer login con:');
     console.log('   Email: joseraulruizreal@gmail.com');
-    console.log('   Password: password');
+    console.log('   Contraseña: password');
     
   } catch (error) {
     console.error('❌ ERROR:', error.message);
