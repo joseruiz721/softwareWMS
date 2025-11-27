@@ -72,19 +72,50 @@ async function createTables() {
     `);
     
     console.log('👤 Insertando usuario administrador...');
-    const result = await client.query(`
-      INSERT INTO usuarios (cedula, nombre, correo, contrasena, role) 
-      VALUES ($1, $2, $3, $4, $5) 
-      ON CONFLICT (correo) DO NOTHING
-      RETURNING id, nombre, correo, role
-    `, [
-      '12345678',
-      'Administrador', 
-      'joseraulruizreal@gmail.com', 
-      '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
-      'admin'
-    ]);
-    
+
+    // Aseguramos que si existe la columna `password` (legacy) también la llenamos para evitar NOT NULL errors
+    try {
+      const cols = await client.query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name IN ('password','contrasena')`);
+      const present = cols.rows.map(r => r.column_name);
+      const hasPassword = present.includes('password');
+
+      const adminHash = '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+
+      let result;
+      if (hasPassword) {
+        result = await client.query(`
+          INSERT INTO usuarios (cedula, nombre, correo, contrasena, password, role) 
+          VALUES ($1, $2, $3, $4, $5, $6) 
+          ON CONFLICT (correo) DO NOTHING
+          RETURNING id, nombre, correo, role
+        `, [
+          '12345678',
+          'Administrador', 
+          'joseraulruizreal@gmail.com', 
+          adminHash,
+          adminHash,
+          'admin'
+        ]);
+      } else {
+        result = await client.query(`
+          INSERT INTO usuarios (cedula, nombre, correo, contrasena, role) 
+          VALUES ($1, $2, $3, $4, $5) 
+          ON CONFLICT (correo) DO NOTHING
+          RETURNING id, nombre, correo, role
+        `, [
+          '12345678',
+          'Administrador', 
+          'joseraulruizreal@gmail.com', 
+          adminHash,
+          'admin'
+        ]);
+      }
+    } catch (adminErr) {
+      console.error('❌ Error insertando usuario admin:', adminErr.message);
+      // Fallback: ensure result exists so downstream logic doesn't crash
+      var result = { rows: [] };
+    }
+
     if (result.rows.length > 0) {
       console.log('✅ USUARIO ADMIN CREADO:');
       console.log('   ID:', result.rows[0].id);

@@ -59,13 +59,15 @@ const initializeDatabase = async () => {
         // Insertar usuario administrador
         // Nota: algunas instalaciones antiguas podrían usar la columna `password` (en inglés).
         // Si la tabla existe pero no tiene `contrasena`, intentamos crearla y copiar valores desde `password`.
+        let hasPassword = false;
+        let hasContrasena = false;
         try {
             // Verificar columnas existentes
             const cols = await pool.query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name IN ('password','contrasena')`);
             const colNames = cols.rows.map(r => r.column_name);
 
-            const hasPassword = colNames.includes('password');
-            const hasContrasena = colNames.includes('contrasena');
+            hasPassword = colNames.includes('password');
+            hasContrasena = colNames.includes('contrasena');
 
             if (!hasContrasena) {
                 console.log('ℹ️ Tabla usuarios existe pero falta columna `contrasena`. La crearé.');
@@ -96,18 +98,39 @@ const initializeDatabase = async () => {
             // No abortamos: la inserción de admin intentará llevarse a cabo y fallará si la columna no existe
         }
 
-        const result = await pool.query(`
-            INSERT INTO usuarios (cedula, nombre, correo, contrasena, role) 
-            VALUES ($1, $2, $3, $4, $5) 
-            ON CONFLICT (correo) DO NOTHING
-            RETURNING id, nombre, correo, role
-        `, [
-            '12345678',
-            'Administrador', 
-            'joseraulruizreal@gmail.com', 
-            '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
-            'admin'
-        ]);
+        // Si la columna `password` también existe (probablemente creada por versiones antiguas),
+        // guardamos el hash en ambas columnas para evitar errores NOT NULL en instalaciones legacy.
+        let result;
+        const adminHash = '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+
+        if (hasPassword) {
+            result = await pool.query(`
+                INSERT INTO usuarios (cedula, nombre, correo, contrasena, password, role) 
+                VALUES ($1, $2, $3, $4, $5, $6) 
+                ON CONFLICT (correo) DO NOTHING
+                RETURNING id, nombre, correo, role
+            `, [
+                '12345678',
+                'Administrador', 
+                'joseraulruizreal@gmail.com', 
+                adminHash,
+                adminHash,
+                'admin'
+            ]);
+        } else {
+            result = await pool.query(`
+                INSERT INTO usuarios (cedula, nombre, correo, contrasena, role) 
+                VALUES ($1, $2, $3, $4, $5) 
+                ON CONFLICT (correo) DO NOTHING
+                RETURNING id, nombre, correo, role
+            `, [
+                '12345678',
+                'Administrador', 
+                'joseraulruizreal@gmail.com', 
+                adminHash,
+                'admin'
+            ]);
+        }
         
         if (result.rows.length > 0) {
             console.log('✅ USUARIO ADMIN CREADO:', result.rows[0]);
