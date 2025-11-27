@@ -6,10 +6,18 @@ const { Pool } = require('pg');
 
 console.log('🔁 Sincronizando columnas password -> contrasena (si corresponde)...');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+const connectionConfig = process.env.DATABASE_URL
+  ? { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }
+  : {
+      user: process.env.DB_USER || 'postgres',
+      host: process.env.DB_HOST || 'localhost',
+      database: process.env.DB_NAME || 'control_acceso',
+      password: process.env.DB_PASSWORD || '09262405',
+      port: process.env.DB_PORT || 5432,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    };
+
+const pool = new Pool(connectionConfig);
 
 async function sync() {
   let client;
