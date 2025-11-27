@@ -1,0 +1,8 @@
+# Ignorar la carpeta de dependencias de Node
+node_modules
+
+# Ignorar el archivo de variables de entorno locales
+.env
+
+# Ignorar logs de NPM
+npm-debug.log

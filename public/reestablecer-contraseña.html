@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Contraseña - Gestion WMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/new-password.css">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+    
+    <div class="reset-container">
+        <div class="reset-header">
+            <div class="logo-container">
+                <img src="/img/logo1.jpg" alt="Logo de la Empresa" class="logo">
+                <div class="logo-glow"></div>
+            </div>
+            <h1 class="reset-title">Nueva Contraseña</h1>
+            <p class="reset-subtitle">Crea una nueva contraseña para tu cuenta</p>
+        </div>
+        
+        <form id="resetForm" class="reset-form" novalidate>
+            <div class="form-group">
+                <div class="input-container">
+                    <i class="input-icon fas fa-lock"></i>
+                    <input type="password" id="newPassword" name="password" placeholder=" " required autocomplete="new-password">
+                    <label for="newPassword" class="input-label">Nueva Contraseña</label>
+                    <button type="button" class="password-toggle" id="toggleNewPassword" aria-label="Mostrar contraseña">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <div class="input-underline"></div>
+                </div>
+                <div class="password-strength" id="passwordStrength"></div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-container">
+                    <i class="input-icon fas fa-lock"></i>
+                    <input type="password" id="confirmPassword" placeholder=" " required autocomplete="new-password">
+                    <label for="confirmPassword" class="input-label">Confirmar Contraseña</label>
+                    <button type="button" class="password-toggle" id="toggleConfirmPassword" aria-label="Mostrar contraseña">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <div class="input-underline"></div>
+                </div>
+            </div>
+
+            <!-- Lista de requisitos de contraseña -->
+            <div class="requirements-list" id="passwordRequirements">
+                <div class="requirement" id="reqLength">
+                    <i class="fas fa-times"></i>
+                    <i class="fas fa-check"></i>
+                    <span>Mínimo 8 caracteres</span>
+                </div>
+                <div class="requirement" id="reqUppercase">
+                    <i class="fas fa-times"></i>
+                    <i class="fas fa-check"></i>
+                    <span>Al menos una letra mayúscula</span>
+                </div>
+                <div class="requirement" id="reqLowercase">
+                    <i class="fas fa-times"></i>
+                    <i class="fas fa-check"></i>
+                    <span>Al menos una letra minúscula</span>
+                </div>
+                <div class="requirement" id="reqNumber">
+                    <i class="fas fa-times"></i>
+                    <i class="fas fa-check"></i>
+                    <span>Al menos un número</span>
+                </div>
+                <div class="requirement" id="reqSpecial">
+                    <i class="fas fa-times"></i>
+                    <i class="fas fa-check"></i>
+                    <span>Al menos un carácter especial</span>
+                </div>
+            </div>
+
+            <div id="error-message" class="error-message" aria-live="assertive"></div>
+            <div id="success-message" class="success-message" aria-live="assertive"></div>
+
+            <button type="submit" id="submitButton" class="submit-button">
+                <span class="button-text">Restablecer Contraseña</span>
+                <div class="button-loader">
+                    <div class="loader-spinner"></div>
+                </div>
+            </button>
+        </form>
+
+        <div class="reset-footer">
+            <p>¿Recordaste tu contraseña? <a href="/" class="login-link">Iniciar sesión</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const resetForm = document.getElementById("resetForm");
+            const newPasswordInput = document.getElementById("newPassword");
+            const confirmPasswordInput = document.getElementById("confirmPassword");
+            const toggleNewPassword = document.getElementById("toggleNewPassword");
+            const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
+            const errorMessage = document.getElementById("error-message");
+            const successMessage = document.getElementById("success-message");
+            const submitButton = document.getElementById("submitButton");
+            const buttonText = submitButton.querySelector('.button-text');
+            const buttonLoader = submitButton.querySelector('.button-loader');
+            const passwordStrength = document.getElementById("passwordStrength");
+            const passwordRequirements = document.getElementById("passwordRequirements");
+
+            // Obtener el token de la URL
+            const pathParts = window.location.pathname.split('/');
+            const token = pathParts[pathParts.length - 1];
+            console.log('🔑 Token obtenido de la URL:', token);
+
+            // Función para mostrar/ocultar contraseña
+            function setupPasswordToggle(toggleButton, passwordInput) {
+                toggleButton.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    
+                    // Cambiar icono
+                    const icon = this.querySelector('i');
+                    if (type === 'text') {
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                        this.setAttribute('aria-label', 'Ocultar contraseña');
+                    } else {
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                        this.setAttribute('aria-label', 'Mostrar contraseña');
+                    }
+                });
+            }
+
+            // Configurar toggles de contraseña
+            setupPasswordToggle(toggleNewPassword, newPasswordInput);
+            setupPasswordToggle(toggleConfirmPassword, confirmPasswordInput);
+
+            // Función para verificar fortaleza de contraseña
+            function checkPasswordStrength(password) {
+                let strength = 0;
+                const requirements = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    lowercase: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[^A-Za-z0-9]/.test(password)
+                };
+
+                // Actualizar lista de requisitos
+                updateRequirementsList(requirements);
+
+                // Calcular fortaleza
+                if (requirements.length) strength++;
+                if (requirements.uppercase) strength++;
+                if (requirements.lowercase) strength++;
+                if (requirements.number) strength++;
+                if (requirements.special) strength++;
+
+                // Mostrar indicador de fortaleza
+                if (password.length > 0) {
+                    passwordStrength.style.display = 'block';
+                    passwordRequirements.style.display = 'block';
+                    
+                    if (strength <= 2) {
+                        passwordStrength.textContent = 'Fortaleza: Débil';
+                        passwordStrength.className = 'password-strength strength-weak';
+                    } else if (strength <= 4) {
+                        passwordStrength.textContent = 'Fortaleza: Media';
+                        passwordStrength.className = 'password-strength strength-medium';
+                    } else {
+                        passwordStrength.textContent = 'Fortaleza: Fuerte';
+                        passwordStrength.className = 'password-strength strength-strong';
+                    }
+                } else {
+                    passwordStrength.style.display = 'none';
+                    passwordRequirements.style.display = 'none';
+                }
+
+                return requirements;
+            }
+
+            // Función para actualizar la lista de requisitos
+            function updateRequirementsList(requirements) {
+                const reqIds = ['reqLength', 'reqUppercase', 'reqLowercase', 'reqNumber', 'reqSpecial'];
+                const reqKeys = ['length', 'uppercase', 'lowercase', 'number', 'special'];
+                
+                reqKeys.forEach((key, index) => {
+                    const element = document.getElementById(reqIds[index]);
+                    if (requirements[key]) {
+                        element.classList.add('valid');
+                    } else {
+                        element.classList.remove('valid');
+                    }
+                });
+            }
+
+            // Event listener para verificar contraseña en tiempo real
+            newPasswordInput.addEventListener('input', function() {
+                checkPasswordStrength(this.value);
+                
+                // Verificar si las contraseñas coinciden
+                if (confirmPasswordInput.value) {
+                    validatePasswordMatch();
+                }
+            });
+
+            confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+
+            function validatePasswordMatch() {
+                const password = newPasswordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+                
+                if (confirmPassword && password !== confirmPassword) {
+                    confirmPasswordInput.style.borderColor = '#e74c3c';
+                } else if (confirmPassword) {
+                    confirmPasswordInput.style.borderColor = '#27ae60';
+                } else {
+                    confirmPasswordInput.style.borderColor = '';
+                }
+            }
+
+            resetForm.addEventListener("submit", async function(event) {
+                event.preventDefault();
+                hideMessages();
+
+                const password = newPasswordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
+                // Validaciones básicas
+                if (!password || !confirmPassword) {
+                    showError("Todos los campos son obligatorios.");
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    showError("Las contraseñas no coinciden.");
+                    return;
+                }
+
+                // Validar requisitos de contraseña
+                const requirements = checkPasswordStrength(password);
+                
+                if (!requirements.length || !requirements.uppercase || 
+                    !requirements.lowercase || !requirements.number || !requirements.special) {
+                    showError("La contraseña no cumple con todos los requisitos de seguridad.");
+                    return;
+                }
+
+                setLoadingState(true);
+
+                try {
+                    const response = await fetch('/auth/reestablecer-pass', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json' 
+                        },
+                        body: JSON.stringify({ 
+                            token: token,
+                            password: password
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    console.log('📨 Respuesta del servidor:', result);
+
+                    if (result.success === true) {
+                        showSuccess("¡Contraseña actualizada con éxito! Redirigiendo al login...");
+                        
+                        // Deshabilitar el formulario después del éxito
+                        resetForm.querySelectorAll('input, button').forEach(element => {
+                            element.disabled = true;
+                        });
+                        
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 3000);
+                    } else {
+                        showError(result.message || "Error al restablecer la contraseña.");
+                    }
+                } catch (error) {
+                    console.error("Error en la petición:", error);
+                    showError("Error de conexión. Por favor, intente más tarde.");
+                } finally {
+                    setLoadingState(false);
+                }
+            });
+
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = "block";
+                errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function showSuccess(message) {
+                successMessage.textContent = message;
+                successMessage.style.display = "block";
+                successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function hideMessages() {
+                errorMessage.style.display = "none";
+                successMessage.style.display = "none";
+            }
+
+            function setLoadingState(isLoading) {
+                submitButton.disabled = isLoading;
+                buttonText.style.opacity = isLoading ? '0' : '1';
+                buttonLoader.style.display = isLoading ? 'block' : 'none';
+                
+                // También deshabilitar los botones de toggle durante la carga
+                toggleNewPassword.disabled = isLoading;
+                toggleConfirmPassword.disabled = isLoading;
+            }
+
+            // Efectos de focus mejorados
+            document.querySelectorAll('.input-container input').forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('focused');
+                });
+                
+                input.addEventListener('blur', function() {
+                    if (!this.value) {
+                        this.parentElement.classList.remove('focused');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

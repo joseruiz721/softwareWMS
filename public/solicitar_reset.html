@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Restablecer Contraseña - Gestion WMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/restablecer-contraseña.css">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+    
+    <div class="reset-container">
+        <div class="reset-header">
+            <div class="logo-container">
+                <img src="img/logo1.jpg" alt="Logo de la Empresa" class="logo">
+                <div class="logo-glow"></div>
+            </div>
+            <h1 class="reset-title">Restablecer Contraseña</h1>
+            <p class="reset-subtitle">Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña</p>
+        </div>
+        
+        <form id="requestForm" class="reset-form" novalidate>
+            <div class="form-group">
+                <div class="input-container">
+                    <i class="input-icon fas fa-envelope"></i>
+                    <input type="email" id="email" name="correo" placeholder=" " required autocomplete="email">
+                    <label for="email" class="input-label">Correo electrónico</label>
+                    <div class="input-underline"></div>
+                </div>
+            </div>
+
+            <div id="error-message" class="error-message" aria-live="assertive"></div>
+            <div id="success-message" class="success-message" aria-live="assertive"></div>
+
+            <button type="submit" id="submitButton" class="submit-button">
+                <span class="button-text">Enviar Enlace de Recuperación</span>
+                <div class="button-loader">
+                    <div class="loader-spinner"></div>
+                </div>
+            </button>
+        </form>
+
+        <div class="reset-info">
+            <div class="info-card">
+                <i class="fas fa-shield-alt info-icon"></i>
+                <div class="info-content">
+                    <h4>Seguridad Garantizada</h4>
+                    <p>El enlace de recuperación será válido por 1 hora y solo podrá ser utilizado una vez</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="reset-footer">
+            <p>¿Recordaste tu contraseña? <a href="/index.html" class="login-link">Iniciar sesión</a></p>
+        </div>
+    </div>
+
+    <script src="js/restablecer-contraseña.js"></script>
+</body>
+</html>

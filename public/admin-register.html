@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3b82f6">
+    <link rel="manifest" href="/manifest.json">
+    <title>Registro de Administradores | Gestion WMS</title>
+    
+    <!-- Estilos externos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin-register.css">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+    
+    <div class="app-container">
+        <div class="register-container">
+            <div class="form-card">
+                <div class="register-header">
+                    <div class="logo-container">
+                        <img src="/img/logo1.jpg" alt="Servibarras Logo" class="logo">
+                        <div class="logo-glow"></div>
+                    </div>
+                    <h1 class="register-title">Registro de Administradores</h1>
+                    <p class="register-subtitle">Complete los datos para registrar un nuevo usuario en el sistema</p>
+                </div>
+
+                <form id="adminRegisterForm" class="register-form">
+                    <div class="form-group">
+                        <div class="input-container">
+                            <i class="input-icon fas fa-id-card"></i>
+                            <input type="text" id="adminCedula" name="cedula" placeholder=" " required minlength="5">
+                            <label for="adminCedula" class="input-label">Cédula *</label>
+                            <div class="input-underline"></div>
+                        </div>
+                        <small class="form-help">Mínimo 5 caracteres</small>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-container">
+                            <i class="input-icon fas fa-user"></i>
+                            <input type="text" id="adminNombre" name="nombre" placeholder=" " required minlength="3">
+                            <label for="adminNombre" class="input-label">Nombre Completo *</label>
+                            <div class="input-underline"></div>
+                        </div>
+                        <small class="form-help">Mínimo 3 caracteres</small>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-container">
+                            <i class="input-icon fas fa-envelope"></i>
+                            <input type="email" id="adminCorreo" name="correo" placeholder=" " required>
+                            <label for="adminCorreo" class="input-label">Correo Electrónico *</label>
+                            <div class="input-underline"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-container">
+                            <i class="input-icon fas fa-lock"></i>
+                            <input type="password" id="adminPassword" name="password" placeholder=" " required minlength="6">
+                            <label for="adminPassword" class="input-label">Contraseña *</label>
+                            <div class="input-underline"></div>
+                            <button type="button" class="toggle-password-button" id="togglePasswordButton">
+                                <i class="fas fa-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength" id="passwordStrength">
+                            <div class="password-strength-bar"></div>
+                        </div>
+                        <div class="password-strength-text" id="passwordStrengthText">
+                            Seguridad de la contraseña
+                        </div>
+                        
+                        <div class="password-requirements">
+                            <h4>Requisitos de la contraseña:</h4>
+                            <div class="requirement invalid" id="reqLength">
+                                <i class="fas fa-circle"></i> Mínimo 6 caracteres
+                            </div>
+                            <div class="requirement invalid" id="reqUppercase">
+                                <i class="fas fa-circle"></i> Al menos una mayúscula
+                            </div>
+                            <div class="requirement invalid" id="reqLowercase">
+                                <i class="fas fa-circle"></i> Al menos una minúscula
+                            </div>
+                            <div class="requirement invalid" id="reqNumber">
+                                <i class="fas fa-circle"></i> Al menos un número
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-container">
+                            <i class="input-icon fas fa-lock"></i>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder=" " required>
+                            <label for="confirmPassword" class="input-label">Confirmar Contraseña *</label>
+                            <div class="input-underline"></div>
+                            <button type="button" class="toggle-password-button" id="toggleConfirmPasswordButton">
+                                <i class="fas fa-eye" id="confirmEyeIcon"></i>
+                            </button>
+                        </div>
+                        <small class="form-help" id="passwordMatchText">Las contraseñas deben coincidir</small>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-container">
+                            <i class="input-icon fas fa-user-tag"></i>
+                            <select id="adminRole" name="role" required>
+                                <option value="user">Usuario Normal</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                            <div class="input-underline"></div>
+                        </div>
+                    </div>
+
+                    <div id="adminSecretSection" class="form-group" style="display: none;">
+                        <div class="input-container">
+                            <i class="input-icon fas fa-key"></i>
+                            <input type="password" id="adminSecret" name="adminSecret" placeholder=" ">
+                            <label for="adminSecret" class="input-label">Clave Secreta de Administrador *</label>
+                            <div class="input-underline"></div>
+                            <button type="button" class="toggle-password-button" id="toggleAdminSecretButton">
+                                <i class="fas fa-eye" id="adminSecretEyeIcon"></i>
+                            </button>
+                        </div>
+                        <small class="form-help">Requerida solo para registrar administradores</small>
+                    </div>
+
+                    <!-- Mensajes de estado -->
+                    <div id="adminErrorMessage" class="error-message" style="display: none;"></div>
+                    <div id="adminSuccessMessage" class="success-message" style="display: none;"></div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="goBack()">
+                            <i class="fas fa-arrow-left"></i> Volver al Dashboard
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="adminRegisterButton">
+                            <span class="button-text">
+                                <i class="fas fa-user-plus"></i> Registrar Usuario
+                            </span>
+                            <div class="button-loader" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="info-card">
+                <h3><i class="fas fa-info-circle"></i> Información Importante</h3>
+                <ul>
+                    <li>Los usuarios normales tienen acceso limitado al sistema</li>
+                    <li>Los administradores tienen acceso completo a todas las funciones</li>
+                    <li>La clave secreta es requerida para registrar nuevos administradores</li>
+                    <li>Verifique que los datos sean correctos antes de registrar</li>
+                    <li>Las contraseñas deben cumplir con los requisitos de seguridad</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/utils.js"></script>
+    <script src="/js/api.js"></script>
+    <script>
+        // 🔥 CORRECCIÓN: Función para volver atrás
+        function goBack() {
+            window.location.href = '/dashboard';
+        }
+
+        class AdminRegister {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.checkAdminPermissions();
+            }
+
+            async checkAdminPermissions() {
+                try {
+                    const response = await ApiService.checkAdminPermissions();
+                    
+                    if (!response.success || !response.isAdmin) {
+                        this.showError('No tienes permisos de administrador para acceder a esta página');
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 3000);
+                        return false;
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('Error verificando permisos:', error);
+                    this.showError('Error al verificar permisos de administrador');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 3000);
+                    return false;
+                }
+            }
+
+            setupEventListeners() {
+                const form = document.getElementById('adminRegisterForm');
+                const roleSelect = document.getElementById('adminRole');
+                const secretSection = document.getElementById('adminSecretSection');
+                const passwordInput = document.getElementById('adminPassword');
+                const confirmPasswordInput = document.getElementById('confirmPassword');
+
+                // Mostrar/ocultar sección de clave secreta
+                roleSelect.addEventListener('change', (e) => {
+                    if (e.target.value === 'admin') {
+                        secretSection.style.display = 'block';
+                        document.getElementById('adminSecret').required = true;
+                    } else {
+                        secretSection.style.display = 'none';
+                        document.getElementById('adminSecret').required = false;
+                    }
+                });
+
+                // Toggle para mostrar/ocultar contraseñas
+                this.setupPasswordToggles();
+
+                // Validación de contraseña en tiempo real
+                passwordInput.addEventListener('input', () => {
+                    this.validatePasswordStrength();
+                    this.checkPasswordMatch();
+                    this.hideMessages();
+                });
+
+                confirmPasswordInput.addEventListener('input', () => {
+                    this.checkPasswordMatch();
+                    this.hideMessages();
+                });
+
+                // Envío del formulario
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleRegistration();
+                });
+
+                // Validación en tiempo real
+                this.setupRealTimeValidation();
+            }
+
+            setupPasswordToggles() {
+                // Toggle para contraseña principal
+                document.getElementById('togglePasswordButton').addEventListener('click', () => {
+                    const passwordInput = document.getElementById('adminPassword');
+                    const icon = document.getElementById('togglePasswordButton').querySelector('i');
+                    
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.className = 'fas fa-eye-slash';
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.className = 'fas fa-eye';
+                    }
+                });
+
+                // Toggle para confirmar contraseña
+                document.getElementById('toggleConfirmPasswordButton').addEventListener('click', () => {
+                    const passwordInput = document.getElementById('confirmPassword');
+                    const icon = document.getElementById('toggleConfirmPasswordButton').querySelector('i');
+                    
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.className = 'fas fa-eye-slash';
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.className = 'fas fa-eye';
+                    }
+                });
+
+                // Toggle para clave secreta de admin
+                document.getElementById('toggleAdminSecretButton').addEventListener('click', () => {
+                    const passwordInput = document.getElementById('adminSecret');
+                    const icon = document.getElementById('toggleAdminSecretButton').querySelector('i');
+                    
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.className = 'fas fa-eye-slash';
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.className = 'fas fa-eye';
+                    }
+                });
+            }
+
+            validatePasswordStrength() {
+                const password = document.getElementById('adminPassword').value;
+                const strengthBar = document.getElementById('passwordStrength');
+                const strengthText = document.getElementById('passwordStrengthText');
+                
+                // Reset requirements
+                const requirements = {
+                    length: document.getElementById('reqLength'),
+                    uppercase: document.getElementById('reqUppercase'),
+                    lowercase: document.getElementById('reqLowercase'),
+                    number: document.getElementById('reqNumber')
+                };
+
+                // Check requirements
+                const hasLength = password.length >= 6;
+                const hasUppercase = /[A-Z]/.test(password);
+                const hasLowercase = /[a-z]/.test(password);
+                const hasNumber = /[0-9]/.test(password);
+
+                // Update requirement indicators
+                requirements.length.className = hasLength ? 'requirement valid' : 'requirement invalid';
+                requirements.uppercase.className = hasUppercase ? 'requirement valid' : 'requirement invalid';
+                requirements.lowercase.className = hasLowercase ? 'requirement valid' : 'requirement invalid';
+                requirements.number.className = hasNumber ? 'requirement valid' : 'requirement invalid';
+
+                // Calculate strength
+                let strength = 0;
+                if (hasLength) strength++;
+                if (hasUppercase) strength++;
+                if (hasLowercase) strength++;
+                if (hasNumber) strength++;
+
+                // Update strength indicator
+                strengthBar.className = 'password-strength';
+                if (strength === 0) {
+                    strengthText.textContent = 'Contraseña débil';
+                    strengthText.style.color = 'var(--error-color)';
+                } else if (strength <= 2) {
+                    strengthBar.classList.add('weak');
+                    strengthText.textContent = 'Contraseña media';
+                    strengthText.style.color = 'var(--warning-color)';
+                } else if (strength === 3) {
+                    strengthBar.classList.add('medium');
+                    strengthText.textContent = 'Contraseña buena';
+                    strengthText.style.color = 'var(--warning-color)';
+                } else {
+                    strengthBar.classList.add('strong');
+                    strengthText.textContent = 'Contraseña fuerte';
+                    strengthText.style.color = 'var(--success-color)';
+                }
+            }
+
+            checkPasswordMatch() {
+                const password = document.getElementById('adminPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const matchText = document.getElementById('passwordMatchText');
+                
+                if (confirmPassword === '') {
+                    matchText.textContent = 'Las contraseñas deben coincidir';
+                    matchText.style.color = 'var(--text-light)';
+                    return false;
+                } else if (password === confirmPassword) {
+                    matchText.textContent = 'Las contraseñas coinciden';
+                    matchText.style.color = 'var(--success-color)';
+                    return true;
+                } else {
+                    matchText.textContent = 'Las contraseñas no coinciden';
+                    matchText.style.color = 'var(--error-color)';
+                    return false;
+                }
+            }
+
+            setupRealTimeValidation() {
+                const inputs = document.querySelectorAll('#adminRegisterForm input');
+                inputs.forEach(input => {
+                    input.addEventListener('input', () => {
+                        this.hideMessages();
+                    });
+                });
+            }
+
+            async handleRegistration() {
+                const hasPermission = await this.checkAdminPermissions();
+                if (!hasPermission) return;
+
+                const userData = {
+                    ced: document.getElementById('adminCedula').value.trim(),
+                    nom: document.getElementById('adminNombre').value.trim(),
+                    correo: document.getElementById('adminCorreo').value.trim(),
+                    pass: document.getElementById('adminPassword').value,
+                    role: document.getElementById('adminRole').value
+                };
+
+                if (userData.role === 'admin') {
+                    userData.adminSecret = document.getElementById('adminSecret').value.trim();
+                }
+
+                if (!this.validateForm(userData)) {
+                    return;
+                }
+
+                try {
+                    this.setLoading(true);
+
+                    const response = await ApiService.register(userData);
+
+                    if (response.success) {
+                        this.showSuccess(`Usuario ${userData.role} registrado exitosamente: ${response.user.nombre}`);
+                        document.getElementById('adminRegisterForm').reset();
+                        document.getElementById('adminSecretSection').style.display = 'none';
+                        
+                        setTimeout(() => {
+                            window.location.href = '/dashboard?user_registered=true';
+                        }, 2000);
+                    } else {
+                        throw new Error(response.message || 'Error en el registro');
+                    }
+                } catch (error) {
+                    console.error('Error registrando usuario:', error);
+                    this.showError('Error al registrar usuario: ' + error.message);
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+
+            validateForm(userData) {
+                const { ced, nom, correo, pass, role } = userData;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                this.hideMessages();
+
+                if (!ced || ced.length < 5) {
+                    this.showError('La cédula debe tener al menos 5 caracteres');
+                    document.getElementById('adminCedula').focus();
+                    return false;
+                }
+
+                if (!nom || nom.length < 3) {
+                    this.showError('El nombre debe tener al menos 3 caracteres');
+                    document.getElementById('adminNombre').focus();
+                    return false;
+                }
+
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+                    this.showError('Por favor, introduce un correo electrónico válido');
+                    document.getElementById('adminCorreo').focus();
+                    return false;
+                }
+
+                if (!pass || pass.length < 6) {
+                    this.showError('La contraseña debe tener al menos 6 caracteres');
+                    document.getElementById('adminPassword').focus();
+                    return false;
+                }
+
+                if (pass !== confirmPassword) {
+                    this.showError('Las contraseñas no coinciden');
+                    document.getElementById('confirmPassword').focus();
+                    return false;
+                }
+
+                if (role === 'admin' && (!userData.adminSecret || userData.adminSecret.trim() === '')) {
+                    this.showError('La clave secreta es requerida para registrar administradores');
+                    document.getElementById('adminSecret').focus();
+                    return false;
+                }
+
+                return true;
+            }
+
+            setLoading(loading) {
+                const button = document.getElementById('adminRegisterButton');
+                const buttonText = button.querySelector('.button-text');
+                const buttonLoader = button.querySelector('.button-loader');
+
+                button.disabled = loading;
+                
+                if (loading) {
+                    buttonText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+                    buttonLoader.style.display = 'inline-block';
+                } else {
+                    buttonText.innerHTML = '<i class="fas fa-user-plus"></i> Registrar Usuario';
+                    buttonLoader.style.display = 'none';
+                }
+            }
+
+            showError(message) {
+                const errorElement = document.getElementById('adminErrorMessage');
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            showSuccess(message) {
+                const successElement = document.getElementById('adminSuccessMessage');
+                successElement.textContent = message;
+                successElement.style.display = 'block';
+                successElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                setTimeout(() => {
+                    successElement.style.display = 'none';
+                }, 5000);
+            }
+
+            hideMessages() {
+                document.getElementById('adminErrorMessage').style.display = 'none';
+                document.getElementById('adminSuccessMessage').style.display = 'none';
+            }
+        }
+
+        // Inicializar cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', () => {
+            new AdminRegister();
+        });
+
+        // Manejar parámetros de URL para mensajes
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('unauthorized') === 'true') {
+            document.addEventListener('DOMContentLoaded', () => {
+                const errorElement = document.getElementById('adminErrorMessage');
+                if (errorElement) {
+                    errorElement.textContent = 'No tienes permisos para acceder a esta página';
+                    errorElement.style.display = 'block';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

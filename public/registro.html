@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Registro - Gestion WMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/registro.css">
+    <style>
+        /* 👑 NUEVO: Estilos para la sección de administrador */
+        .admin-toggle-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #8b5cf6;
+        }
+        
+        .admin-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        
+        .admin-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #8b5cf6;
+        }
+        
+        .admin-toggle-icon {
+            font-size: 18px;
+        }
+        
+        .admin-toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: #ddd;
+            border-radius: 12px;
+            transition: background 0.3s;
+        }
+        
+        .admin-toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        
+        .admin-toggle input:checked + .admin-toggle-switch {
+            background: #8b5cf6;
+        }
+        
+        .admin-toggle input:checked + .admin-toggle-switch::after {
+            transform: translateX(26px);
+        }
+        
+        .admin-secret-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            display: none;
+        }
+        
+        .admin-secret-section.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .admin-secret-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .admin-secret-note {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+    
+    <div class="register-container">
+        <div class="register-header">
+            <div class="logo-container">
+                <img src="img/logo1.jpg" alt="Logo de la Empresa" class="logo">
+                <div class="logo-glow"></div>
+            </div>
+            <h1 class="register-title">Crear Cuenta</h1>
+            <p class="register-subtitle">Completa tus datos para registrarte en el sistema</p>
+        </div>
+        
+        <form id="registerForm" class="register-form" novalidate>
+            <div class="form-row">
+                <div class="form-group">
+                    <div class="input-container">
+                        <i class="input-icon fas fa-id-card"></i>
+                        <input type="text" id="cedula" name="ced" placeholder=" " required autocomplete="off">
+                        <label for="cedula" class="input-label">Cédula</label>
+                        <div class="input-underline"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-container">
+                        <i class="input-icon fas fa-user"></i>
+                        <input type="text" id="nombre" name="nom" placeholder=" " required autocomplete="name">
+                        <label for="nombre" class="input-label">Nombre completo</label>
+                        <div class="input-underline"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-container">
+                    <i class="input-icon fas fa-envelope"></i>
+                    <input type="email" id="correo" name="correo" placeholder=" " required autocomplete="email">
+                    <label for="correo" class="input-label">Correo electrónico</label>
+                    <div class="input-underline"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-container">
+                    <i class="input-icon fas fa-lock"></i>
+                    <input type="password" id="password" name="pass" placeholder=" " required autocomplete="new-password">
+                    <label for="password" class="input-label">Contraseña</label>
+                    <div class="input-underline"></div>
+                    <button type="button" class="toggle-password-button" id="togglePasswordButton" aria-label="Mostrar contraseña">
+                        <i class="fas fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+                <div class="password-strength">
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <span class="strength-text" id="strengthText">Seguridad de la contraseña</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-container">
+                    <i class="input-icon fas fa-lock"></i>
+                    <input type="password" id="confirmPassword" name="confirmPass" placeholder=" " required autocomplete="new-password">
+                    <label for="confirmPassword" class="input-label">Confirmar contraseña</label>
+                    <div class="input-underline"></div>
+                </div>
+            </div>
+
+            <!-- 👑 NUEVO: Sección para registro de administradores -->
+            <div class="admin-toggle-section">
+                <label class="admin-toggle">
+                    <input type="checkbox" id="adminToggle" name="adminToggle">
+                    <div class="admin-toggle-label">
+                        <i class="fas fa-user-shield admin-toggle-icon"></i>
+                        <span>Registrar como administrador</span>
+                    </div>
+                    <div class="admin-toggle-switch"></div>
+                </label>
+                
+                <div id="adminSecretSection" class="admin-secret-section">
+                    <label for="adminSecret" style="display: block; margin-bottom: 8px; font-weight: 600; color: #8b5cf6;">
+                        <i class="fas fa-key"></i> Clave secreta de administrador
+                    </label>
+                    <input type="password" id="adminSecret" name="adminSecret" class="admin-secret-input" 
+                           placeholder="Ingrese la clave secreta" autocomplete="off">
+                    <div class="admin-secret-note">
+                        <i class="fas fa-info-circle"></i> Esta clave es requerida para crear cuentas de administrador
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-options">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="terms" required>
+                    <span class="checkmark"></span>
+                    Acepto los <a href="/terminos" class="terms-link">términos y condiciones</a>
+                </label>
+            </div>
+
+            <div id="error-message" class="error-message" aria-live="assertive"></div>
+            <div id="success-message" class="success-message" aria-live="assertive"></div>
+
+            <button type="submit" id="registerButton" class="register-button">
+                <span class="button-text">Crear Cuenta</span>
+                <div class="button-loader">
+                    <div class="loader-spinner"></div>
+                </div>
+            </button>
+        </form>
+        
+        <div class="register-footer">
+            <p>¿Ya tienes una cuenta? <a href="/index.html" class="login-link">Iniciar sesión</a></p>
+        </div>
+    </div>
+
+    <script src="js/registro.js"></script>
+    
+    <script>
+        // 👑 NUEVO: Configurar toggle de administrador
+        document.addEventListener('DOMContentLoaded', function() {
+            const adminToggle = document.getElementById('adminToggle');
+            const adminSecretSection = document.getElementById('adminSecretSection');
+            const adminSecretInput = document.getElementById('adminSecret');
+            
+            if (adminToggle && adminSecretSection) {
+                adminToggle.addEventListener('change', function() {
+                    if (this.checked) {
+                        adminSecretSection.classList.add('show');
+                        adminSecretInput.required = true;
+                    } else {
+                        adminSecretSection.classList.remove('show');
+                        adminSecretInput.required = false;
+                        adminSecretInput.value = '';
+                    }
+                });
+            }
+            
+            // Verificar si hay una clave secreta temporal (desde el login)
+            const tempAdminSecret = sessionStorage.getItem('tempAdminSecret');
+            if (tempAdminSecret && adminToggle && adminSecretInput) {
+                adminToggle.checked = true;
+                adminSecretSection.classList.add('show');
+                adminSecretInput.value = tempAdminSecret;
+                adminSecretInput.required = true;
+                
+                // Limpiar la clave temporal
+                sessionStorage.removeItem('tempAdminSecret');
+            }
+            
+            // Manejar enlace de login
+            const loginLink = document.querySelector('.login-link');
+            if (loginLink) {
+                loginLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = '/index.html';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="theme-color" content="#1a365d">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Repuestos | Gestion Servibarras</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/spare-parts-register.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="page-title">Registro de Repuestos</h1>
+            <a href="/dashboard" class="btn btn-back">
+                <i class="fas fa-arrow-left"></i> Volver al Dashboard
+            </a>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+
+        <!-- Formulario de Registro -->
+        <div class="card">
+            <h2>Información del Repuesto</h2>
+            
+            <form id="repuesto-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="repuesto-nombre" class="required">Nombre del Repuesto</label>
+                        <input type="text" id="repuesto-nombre" name="nombre" required placeholder="Ej: Memoria RAM 8GB">
+                    </div>
+                    <div class="form-group">
+                        <label for="repuesto-codigo" class="required">Código Interno</label>
+                        <input type="text" id="repuesto-codigo" name="codigo" required placeholder="Ej: RAM-8GB-DDR4">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="repuesto-proceso">Proceso</label>
+                        <input type="text" id="repuesto-proceso" name="proceso" placeholder="Ej: Ensamblaje, Reparación">
+                    </div>
+                    <div class="form-group">
+                        <label for="repuesto-codigo-siesa">Código SIESA</label>
+                        <input type="text" id="repuesto-codigo-siesa" name="codigo_siesa" placeholder="Código del sistema SIESA">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="repuesto-cantidad" class="required">Cantidad</label>
+                        <input type="number" id="repuesto-cantidad" name="cantidad" required min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="repuesto-stock-minimo" class="required">Stock Mínimo</label>
+                        <input type="number" id="repuesto-stock-minimo" name="stock_minimo" required min="1" value="5">
+                    </div>
+                    <div class="form-group">
+                        <label for="repuesto-rotacion">Rotación</label>
+                        <select id="repuesto-rotacion" name="rotacion">
+                            <option value="Alta">Alta</option>
+                            <option value="Media" selected>Media</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="repuesto-ubicacion">Ubicación</label>
+                        <input type="text" id="repuesto-ubicacion" name="ubicacion" placeholder="Ej: Estante A, Nivel 2">
+                    </div>
+                    <div class="form-group">
+                        <label for="repuesto-fecha-ingreso" class="required">Fecha de Ingreso</label>
+                        <input type="date" id="repuesto-fecha-ingreso" name="fecha_ingreso" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="repuesto-descripcion">Descripción</label>
+                    <textarea id="repuesto-descripcion" name="descripcion" placeholder="Descripción detallada del repuesto..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-back" id="cancelBtn">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success" id="saveBtn">
+                        <i class="fas fa-save"></i> Registrar Repuesto
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de Repuestos Existentes -->
+        <div class="card">
+            <h2>Repuestos Registrados</h2>
+            <div class="table-container">
+                <table class="repuestos-table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Stock</th>
+                            <th>Stock Mínimo</th>
+                            <th>Ubicación</th>
+                            <th>Fecha Ingreso</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="repuestos-table-body">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px;">
+                                Cargando repuestos...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edición - MÁS ANCHO -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="closeEditModal">&times;</span>
+            <div class="modal-header">
+                <h2>Editar Repuesto</h2>
+            </div>
+            
+            <form id="edit-repuesto-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-repuesto-nombre" class="required">Nombre del Repuesto</label>
+                        <input type="text" id="edit-repuesto-nombre" name="nombre" required placeholder="Ej: Memoria RAM 8GB">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-repuesto-codigo" class="required">Código Interno</label>
+                        <input type="text" id="edit-repuesto-codigo" name="codigo" required placeholder="Ej: RAM-8GB-DDR4">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-repuesto-proceso">Proceso</label>
+                        <input type="text" id="edit-repuesto-proceso" name="proceso" placeholder="Ej: Ensamblaje, Reparación">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-repuesto-codigo-siesa">Código SIESA</label>
+                        <input type="text" id="edit-repuesto-codigo-siesa" name="codigo_siesa" placeholder="Código del sistema SIESA">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-repuesto-cantidad" class="required">Cantidad</label>
+                        <input type="number" id="edit-repuesto-cantidad" name="cantidad" required min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-repuesto-stock-minimo" class="required">Stock Mínimo</label>
+                        <input type="number" id="edit-repuesto-stock-minimo" name="stock_minimo" required min="1" value="5">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-repuesto-rotacion">Rotación</label>
+                        <select id="edit-repuesto-rotacion" name="rotacion">
+                            <option value="Alta">Alta</option>
+                            <option value="Media" selected>Media</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-repuesto-ubicacion">Ubicación</label>
+                        <input type="text" id="edit-repuesto-ubicacion" name="ubicacion" placeholder="Ej: Estante A, Nivel 2">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-repuesto-fecha-ingreso" class="required">Fecha de Ingreso</label>
+                        <input type="date" id="edit-repuesto-fecha-ingreso" name="fecha_ingreso" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-repuesto-descripcion">Descripción</label>
+                    <textarea id="edit-repuesto-descripcion" name="descripcion" placeholder="Descripción detallada del repuesto..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-back" id="cancelEditBtn">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="updateBtn">
+                        <i class="fas fa-sync-alt"></i> Actualizar Repuesto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // El JavaScript permanece exactamente igual - solo cambios en el CSS
+        document.addEventListener('DOMContentLoaded', function() {
+            // Variables globales
+            const form = document.getElementById('repuesto-form');
+            const editForm = document.getElementById('edit-repuesto-form');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const updateBtn = document.getElementById('updateBtn');
+            const cancelEditBtn = document.getElementById('cancelEditBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            const repuestosTableBody = document.getElementById('repuestos-table-body');
+            const editModal = document.getElementById('editModal');
+            const closeEditModal = document.getElementById('closeEditModal');
+            
+            let repuestoEditando = null;
+
+            // Inicializar
+            init();
+
+            async function init() {
+                setDefaultDate();
+                setupEventListeners();
+                await cargarRepuestos();
+            }
+
+            // Configurar event listeners
+            function setupEventListeners() {
+                // Guardar repuesto
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    guardarRepuesto();
+                });
+
+                // Cancelar registro
+                cancelBtn.addEventListener('click', function() {
+                    if (confirm('¿Está seguro que desea cancelar el registro?')) {
+                        resetForm();
+                    }
+                });
+
+                // Actualizar repuesto
+                editForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    actualizarRepuesto();
+                });
+
+                // Cancelar edición
+                cancelEditBtn.addEventListener('click', function() {
+                    cerrarModalEdicion();
+                });
+
+                // Cerrar modal
+                closeEditModal.addEventListener('click', function() {
+                    cerrarModalEdicion();
+                });
+
+                // Cerrar modal al hacer clic fuera
+                editModal.addEventListener('click', function(e) {
+                    if (e.target === editModal) {
+                        cerrarModalEdicion();
+                    }
+                });
+            }
+
+            // Cargar repuestos existentes
+            async function cargarRepuestos() {
+                try {
+                    const response = await fetch('/api/repuestos');
+                    
+                    if (response.ok) {
+                        const repuestos = await response.json();
+                        populateRepuestosTable(repuestos);
+                    } else {
+                        showStatus('error', 'Error al cargar los repuestos existentes');
+                        repuestosTableBody.innerHTML = `
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 20px; color: var(--error-color);">
+                                    Error al cargar los repuestos
+                                </td>
+                            </tr>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error cargando repuestos:', error);
+                    showStatus('error', 'Error al cargar los repuestos existentes');
+                }
+            }
+
+            // Llenar tabla de repuestos
+            function populateRepuestosTable(repuestos) {
+                if (repuestos.length === 0) {
+                    repuestosTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px;">
+                                No hay repuestos registrados
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                repuestosTableBody.innerHTML = repuestos.map(repuesto => {
+                    const stockClass = repuesto.cantidad <= repuesto.stock_minimo ? 'stock-bajo' : 'stock-normal';
+                    const fechaIngreso = new Date(repuesto.fecha_ingreso).toLocaleDateString('es-ES');
+                    
+                    return `
+                        <tr>
+                            <td><strong>${repuesto.codigo || 'N/A'}</strong></td>
+                            <td>${repuesto.nombre || 'N/A'}</td>
+                            <td class="${stockClass}">${repuesto.cantidad || 0}</td>
+                            <td>${repuesto.stock_minimo || 0}</td>
+                            <td>${repuesto.ubicacion || 'No especificada'}</td>
+                            <td>${fechaIngreso}</td>
+                            <td class="acciones-cell">
+                                <button class="btn btn-primary btn-small" onclick="editarRepuesto(${repuesto.id})">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                                <button class="btn btn-danger btn-small" onclick="eliminarRepuesto(${repuesto.id})">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Guardar repuesto
+            async function guardarRepuesto() {
+                try {
+                    if (!validarFormulario(form)) {
+                        return;
+                    }
+
+                    const formData = obtenerDatosFormulario(form);
+                    
+                    const response = await fetch('/api/repuestos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showStatus('success', `✅ Repuesto registrado con éxito. ID: ${result.repuestoId}`);
+                        resetForm();
+                        await cargarRepuestos();
+                    } else {
+                        showStatus('error', `❌ ${result.message || 'Error al registrar el repuesto'}`);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showStatus('error', error.message || 'Error al conectar con el servidor');
+                }
+            }
+
+            // Editar repuesto
+            window.editarRepuesto = async function(id) {
+                try {
+                    const response = await fetch(`/api/repuestos/${id}`);
+                    
+                    if (response.status === 404) {
+                        throw new Error('La ruta para obtener repuestos no existe en el servidor');
+                    }
+                    
+                    if (!response.ok) {
+                        throw new Error(`Error del servidor: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (!result.success) {
+                        throw new Error(result.message || 'Error en la respuesta del servidor');
+                    }
+                    
+                    if (!result.data) {
+                        throw new Error('No se recibieron datos del repuesto');
+                    }
+                    
+                    mostrarModalEdicion(result.data);
+                    
+                } catch (error) {
+                    console.error('Error detallado:', error);
+                    showStatus('error', `ERROR: ${error.message}`);
+                }
+            };
+
+            // Mostrar modal de edición
+            function mostrarModalEdicion(repuesto) {
+                repuestoEditando = repuesto;
+                
+                // Llenar formulario con datos existentes
+                document.getElementById('edit-repuesto-nombre').value = repuesto.nombre || '';
+                document.getElementById('edit-repuesto-proceso').value = repuesto.proceso || '';
+                document.getElementById('edit-repuesto-descripcion').value = repuesto.descripcion || '';
+                document.getElementById('edit-repuesto-codigo').value = repuesto.codigo || '';
+                document.getElementById('edit-repuesto-codigo-siesa').value = repuesto.codigo_siesa || '';
+                document.getElementById('edit-repuesto-cantidad').value = repuesto.cantidad || 0;
+                document.getElementById('edit-repuesto-rotacion').value = repuesto.rotacion || 'Media';
+                document.getElementById('edit-repuesto-stock-minimo').value = repuesto.stock_minimo || 5;
+                document.getElementById('edit-repuesto-ubicacion').value = repuesto.ubicacion || '';
+                document.getElementById('edit-repuesto-fecha-ingreso').value = repuesto.fecha_ingreso || '';
+                
+                // Mostrar modal
+                editModal.style.display = 'block';
+                statusMessage.style.display = 'none';
+            }
+
+            // Actualizar repuesto
+            async function actualizarRepuesto() {
+                try {
+                    if (!validarFormulario(editForm)) {
+                        return;
+                    }
+
+                    const formData = obtenerDatosFormulario(editForm);
+                    
+                    const response = await fetch(`/api/repuestos/${repuestoEditando.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showStatus('success', '✅ Repuesto actualizado con éxito');
+                        cerrarModalEdicion();
+                        await cargarRepuestos();
+                    } else {
+                        throw new Error(result.message || 'Error al actualizar el repuesto');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error al actualizar repuesto:', error);
+                    showStatus('error', `Error al actualizar repuesto: ${error.message}`);
+                }
+            }
+
+            // Cerrar modal de edición
+            function cerrarModalEdicion() {
+                editModal.style.display = 'none';
+                repuestoEditando = null;
+                editForm.reset();
+            }
+
+            // Eliminar repuesto
+            window.eliminarRepuesto = function(id) {
+                if (confirm('¿Está seguro que desea eliminar este repuesto?')) {
+                    eliminarRepuestoConfirmado(id);
+                }
+            };
+
+            async function eliminarRepuestoConfirmado(id) {
+                try {
+                    const response = await fetch(`/api/repuestos/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showStatus('success', '✅ Repuesto eliminado con éxito');
+                        await cargarRepuestos();
+                    } else {
+                        showStatus('error', `❌ ${result.message || 'Error al eliminar el repuesto'}`);
+                    }
+                } catch (error) {
+                    console.error('Error eliminando repuesto:', error);
+                    showStatus('error', 'Error al eliminar el repuesto');
+                }
+            }
+
+            // Validar formulario
+            function validarFormulario(formElement) {
+                const requiredInputs = formElement.querySelectorAll('[required]');
+                let isValid = true;
+
+                requiredInputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        input.style.borderColor = 'var(--error-color)';
+                        isValid = false;
+                    } else {
+                        input.style.borderColor = 'var(--border-color)';
+                    }
+                });
+
+                // Validar que cantidad no sea negativa
+                const cantidadInput = formElement.querySelector('input[name="cantidad"]');
+                if (cantidadInput && cantidadInput.value < 0) {
+                    showStatus('error', '❌ La cantidad no puede ser negativa');
+                    cantidadInput.style.borderColor = 'var(--error-color)';
+                    isValid = false;
+                }
+
+                // Validar que stock mínimo sea positivo
+                const stockMinimoInput = formElement.querySelector('input[name="stock_minimo"]');
+                if (stockMinimoInput && stockMinimoInput.value < 1) {
+                    showStatus('error', '❌ El stock mínimo debe ser al menos 1');
+                    stockMinimoInput.style.borderColor = 'var(--error-color)';
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    showStatus('error', '❌ Por favor complete todos los campos obligatorios correctamente');
+                }
+
+                return isValid;
+            }
+
+            // Obtener datos del formulario
+            function obtenerDatosFormulario(formElement) {
+                const formData = new FormData(formElement);
+                return {
+                    nombre: formData.get('nombre'),
+                    proceso: formData.get('proceso') || null,
+                    descripcion: formData.get('descripcion') || null,
+                    codigo: formData.get('codigo'),
+                    codigo_siesa: formData.get('codigo_siesa') || null,
+                    cantidad: parseInt(formData.get('cantidad')) || 0,
+                    rotacion: formData.get('rotacion') || 'Media',
+                    stock_minimo: parseInt(formData.get('stock_minimo')) || 5,
+                    fecha_ingreso: formData.get('fecha_ingreso') || repuestoEditando?.fecha_ingreso,
+                    ubicacion: formData.get('ubicacion') || null
+                };
+            }
+
+            // Resetear formulario
+            function resetForm() {
+                form.reset();
+                setDefaultDate();
+                
+                const requiredInputs = form.querySelectorAll('[required]');
+                requiredInputs.forEach(input => {
+                    input.style.borderColor = 'var(--border-color)';
+                });
+            }
+
+            // Establecer fecha actual por defecto
+            function setDefaultDate() {
+                const today = new Date().toISOString().split('T')[0];
+                const fechaInput = document.getElementById('repuesto-fecha-ingreso');
+                fechaInput.value = today;
+            }
+
+            // Mostrar mensajes de estado
+            function showStatus(type, message) {
+                statusMessage.textContent = message;
+                statusMessage.className = `status-message status-${type}`;
+                statusMessage.style.display = 'block';
+                
+                if (type !== 'error') {
+                    setTimeout(() => {
+                        statusMessage.style.display = 'none';
+                    }, 5000);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

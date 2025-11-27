@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="theme-color" content="#1a365d">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Dispositivos | Gestion Servibarras</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/device-register.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="page-title">Registro de Dispositivos</h1>
+            <a href="/dashboard" class="btn btn-back">
+                <i class="fas fa-arrow-left"></i> Volver al Dashboard
+            </a>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+
+        <div class="card">
+            <h2>Seleccione el tipo de dispositivo</h2>
+            
+            <div class="device-type-tabs">
+                <div class="device-type-tab active" data-tab="ordenador">Ordenadores</div>
+                <div class="device-type-tab" data-tab="access_point">Access Point</div>
+                <div class="device-type-tab" data-tab="reader">Readers</div>
+                <div class="device-type-tab" data-tab="etiquetadora">Etiquetadoras</div>
+                <div class="device-type-tab" data-tab="tablet">Tablets</div>
+                <div class="device-type-tab" data-tab="lector_qr">Lectores QR</div>
+            </div>
+
+            <!-- Formulario dinámico -->
+            <form id="device-form" class="device-form active">
+                <!-- Los campos se generarán dinámicamente con JavaScript -->
+            </form>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-back" id="cancelBtn">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="saveBtn">
+                    <i class="fas fa-save"></i> Guardar Dispositivo
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Variables
+        const tabs = document.querySelectorAll('.device-type-tab');
+        const form = document.getElementById('device-form');
+        const saveBtn = document.getElementById('saveBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        let currentTab = 'ordenador';
+
+        // Definición de campos para cada tipo de dispositivo
+        const deviceFields = {
+            'ordenador': [
+                { id: 'ubicacion', label: 'Ubicación', type: 'text', required: true },
+                { id: 'ip', label: 'Dirección IP', type: 'text' },
+                { id: 'serial', label: 'Número de Serie', type: 'text', required: true },
+                { id: 'marca', label: 'Marca', type: 'text' },
+                { id: 'activo_fijo', label: 'Activo Fijo', type: 'text', placeholder: 'Número de activo fijo' },
+                { id: 'estado', label: 'Estado', type: 'select', options: ['Activo', 'En reparación', 'Dañado', 'Retirado'], default: 'Activo' },
+                { id: 'fecha', label: 'Fecha de Ingreso', type: 'date', required: true },
+                { id: 'observaciones', label: 'Observaciones', type: 'textarea' }
+            ],
+            'access_point': [
+                { id: 'ubicacion', label: 'Ubicación', type: 'text', required: true },
+                { id: 'ip', label: 'Dirección IP', type: 'text' },
+                { id: 'serial', label: 'Número de Serie', type: 'text', required: true },
+                { id: 'modelo', label: 'Modelo', type: 'text' },
+                { id: 'activo_fijo', label: 'Activo Fijo', type: 'text', placeholder: 'Número de activo fijo' },
+                { id: 'version', label: 'Versión', type: 'text' },
+                { id: 'mac', label: 'Dirección MAC', type: 'text' },
+                { id: 'arquitectura', label: 'Arquitectura', type: 'text' },
+                { id: 'fecha', label: 'Fecha de Ingreso', type: 'date', required: true },
+                { id: 'estado', label: 'Estado', type: 'select', options: ['Activo', 'En reparación', 'Dañado', 'Retirado'], default: 'Activo' },
+                { id: 'observacion', label: 'Observaciones', type: 'textarea' }
+            ],
+            'reader': [
+                { id: 'ubicacion', label: 'Ubicación', type: 'text', required: true },
+                { id: 'ip', label: 'Dirección IP', type: 'text' },
+                { id: 'no_maquina', label: 'No Máquina', type: 'text' },
+                { id: 'serial', label: 'Número de Serie', type: 'text', required: true },
+                { id: 'activo_fijo', label: 'Activo Fijo', type: 'text', placeholder: 'Número de activo fijo' },
+                { id: 'mac', label: 'Dirección MAC', type: 'text' },
+                { id: 'estado', label: 'Estado', type: 'select', options: ['Activo', 'En reparación', 'Dañado', 'Retirado'], default: 'Activo' },
+                { id: 'fecha', label: 'Fecha de Ingreso', type: 'date', required: true },
+                { id: 'observaciones', label: 'Observaciones', type: 'textarea' }
+            ],
+            'etiquetadora': [
+                { id: 'ubicacion', label: 'Ubicación', type: 'text', required: true },
+                { id: 'ip', label: 'Dirección IP', type: 'text' },
+                { id: 'serial', label: 'Número de Serie', type: 'text', required: true },
+                { id: 'modelo', label: 'Modelo', type: 'text' },
+                { id: 'activo_fijo', label: 'Activo Fijo', type: 'text', placeholder: 'Número de activo fijo' },
+                { id: 'serial_aplicador', label: 'Serial Aplicador', type: 'text' },
+                { id: 'mac', label: 'Dirección MAC', type: 'text' },
+                { id: 'fecha', label: 'Fecha de Ingreso', type: 'date', required: true },
+                { id: 'estado', label: 'Estado', type: 'select', options: ['Activo', 'En reparación', 'Dañado', 'Retirado'], default: 'Activo' },
+                { id: 'observaciones', label: 'Observaciones', type: 'textarea' }
+            ],
+            'tablet': [
+                { id: 'ubicacion', label: 'Ubicación', type: 'text', required: true },
+                { id: 'ip', label: 'Dirección IP', type: 'text' },
+                { id: 'no_maquina', label: 'No Máquina', type: 'text' },
+                { id: 'serial', label: 'Número de Serie', type: 'text', required: true },
+                { id: 'activo_fijo', label: 'Activo Fijo', type: 'text', placeholder: 'Número de activo fijo' },
+                { id: 'estado', label: 'Estado', type: 'select', options: ['Activo', 'En reparación', 'Dañado', 'Retirado'], default: 'Activo' },
+                { id: 'fecha', label: 'Fecha de Ingreso', type: 'date', required: true },
+                { id: 'observaciones', label: 'Observaciones', type: 'textarea' }
+            ],
+            'lector_qr': [
+                { id: 'ubicacion', label: 'Ubicación', type: 'text', required: true },
+                { id: 'modelo', label: 'Modelo', type: 'text', required: true },
+                { id: 'activo_fijo', label: 'Activo Fijo', type: 'text', placeholder: 'Número de activo fijo' },
+                { id: 'activo', label: 'Activo', type: 'select', options: ['Sí', 'No'], values: ['true', 'false'], default: 'true' },
+                { id: 'estado', label: 'Estado', type: 'select', options: ['Activo', 'En reparación', 'Dañado', 'Retirado'], default: 'Activo' },
+                { id: 'fecha', label: 'Fecha de Ingreso', type: 'date', required: true },
+                { id: 'observaciones', label: 'Observaciones', type: 'textarea' }
+            ]
+        };
+
+        // Mapeo de nombres de tabla (coincide con la base de datos)
+        const tableNames = {
+            'ordenador': 'ordenadores',
+            'access_point': 'access_point',
+            'reader': 'readers',
+            'etiquetadora': 'etiquetadoras',
+            'tablet': 'tablets',
+            'lector_qr': 'lectores_qr'
+        };
+
+        // Cambiar entre pestañas
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentTab = this.getAttribute('data-tab');
+                renderForm(currentTab);
+            });
+        });
+
+        // Renderizar formulario según el tipo de dispositivo
+        function renderForm(deviceType) {
+            form.innerHTML = '';
+            const fields = deviceFields[deviceType];
+            
+            // Dividir campos en dos columnas
+            const midPoint = Math.ceil(fields.length / 2);
+            const firstCol = fields.slice(0, midPoint);
+            const secondCol = fields.slice(midPoint);
+            
+            const formRow = document.createElement('div');
+            formRow.className = 'form-row';
+            
+            // Primera columna
+            const firstColDiv = document.createElement('div');
+            firstColDiv.className = 'form-col';
+            firstCol.forEach(field => {
+                firstColDiv.appendChild(createField(field, deviceType));
+            });
+            formRow.appendChild(firstColDiv);
+            
+            // Segunda columna
+            const secondColDiv = document.createElement('div');
+            secondColDiv.className = 'form-col';
+            secondCol.forEach(field => {
+                secondColDiv.appendChild(createField(field, deviceType));
+            });
+            formRow.appendChild(secondColDiv);
+            
+            form.appendChild(formRow);
+            
+            // Establecer fecha actual por defecto
+            setDefaultDate(deviceType);
+        }
+
+        // Crear campo de formulario
+        function createField(field, deviceType) {
+            const fieldGroup = document.createElement('div');
+            fieldGroup.className = 'form-group';
+            
+            const label = document.createElement('label');
+            label.textContent = field.label;
+            if (field.required) {
+                label.className = 'required';
+            }
+            label.htmlFor = `${deviceType}-${field.id}`;
+            fieldGroup.appendChild(label);
+            
+            let input;
+            if (field.type === 'select') {
+                input = document.createElement('select');
+                input.id = `${deviceType}-${field.id}`;
+                
+                const options = field.options || [];
+                const values = field.values || options;
+                
+                options.forEach((option, index) => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = values[index];
+                    optionElement.textContent = option;
+                    if (field.default === option) {
+                        optionElement.selected = true;
+                    }
+                    input.appendChild(optionElement);
+                });
+            } else if (field.type === 'textarea') {
+                input = document.createElement('textarea');
+                input.id = `${deviceType}-${field.id}`;
+                if (field.placeholder) {
+                    input.placeholder = field.placeholder;
+                }
+            } else {
+                input = document.createElement('input');
+                input.type = field.type;
+                input.id = `${deviceType}-${field.id}`;
+                if (field.placeholder) {
+                    input.placeholder = field.placeholder;
+                }
+            }
+            
+            fieldGroup.appendChild(input);
+            return fieldGroup;
+        }
+
+        // Guardar dispositivo
+        saveBtn.addEventListener('click', async function() {
+            try {
+                if (!validateForm(currentTab)) {
+                    return;
+                }
+
+                const formData = getFormData(currentTab);
+                
+                // Validar y formatear campos especiales
+                if (formData.fecha) {
+                    formData.fecha_ingreso = formData.fecha;
+                    delete formData.fecha;
+                }
+
+                // Convertir campos booleanos
+                if (formData.activo !== undefined) {
+                    formData.activo = formData.activo === 'true';
+                }
+
+                // Mostrar datos que se enviarán (para depuración)
+                console.log('Datos a enviar:', {
+                    tipo: tableNames[currentTab],
+                    datos: formData
+                });
+
+                const response = await fetch(`/api/dispositivos/${tableNames[currentTab]}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Error en la respuesta del servidor');
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('success', `Dispositivo registrado con éxito. ID: ${result.dispositivoId}`);
+                    resetForm(currentTab);
+                } else {
+                    showStatus('error', result.message || 'Error al registrar el dispositivo');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('error', error.message || 'Error al conectar con el servidor');
+            }
+        });
+
+        // Cancelar registro
+        cancelBtn.addEventListener('click', function() {
+            if (confirm('¿Está seguro que desea cancelar el registro?')) {
+                resetForm(currentTab);
+            }
+        });
+
+        // Función para validar el formulario
+        function validateForm(tab) {
+            const requiredInputs = form.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredInputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.style.borderColor = 'var(--error-color)';
+                    isValid = false;
+                } else {
+                    input.style.borderColor = 'var(--border-color)';
+                }
+            });
+
+            if (!isValid) {
+                showStatus('error', 'Por favor complete todos los campos obligatorios');
+            }
+
+            return isValid;
+        }
+
+        // Función para obtener datos del formulario
+        function getFormData(tab) {
+            const formData = {};
+            const fields = deviceFields[tab];
+            
+            fields.forEach(field => {
+                const input = document.getElementById(`${tab}-${field.id}`);
+                if (input && input.value.trim() !== '') {
+                    formData[field.id] = input.value;
+                }
+            });
+
+            return formData;
+        }
+
+        // Función para resetear el formulario
+        function resetForm(tab) {
+            form.reset();
+            
+            // Restablecer bordes de los campos requeridos
+            const requiredInputs = form.querySelectorAll('[required]');
+            requiredInputs.forEach(input => {
+                input.style.borderColor = 'var(--border-color)';
+            });
+            
+            // Restablecer fecha actual
+            setDefaultDate(tab);
+        }
+
+        // Función para mostrar mensajes de estado
+        function showStatus(type, message) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Establecer fecha actual por defecto
+        function setDefaultDate(tab) {
+            const dateInput = document.getElementById(`${tab}-fecha`);
+            if (dateInput && !dateInput.value) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.value = today;
+            }
+        }
+
+        // Inicializar formulario
+        renderForm(currentTab);
+    });
+</script>
+</body>
+</html>

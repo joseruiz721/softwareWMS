@@ -1,0 +1,665 @@
+:root {
+    /* Paleta de colores principal - Azul profesional */
+    --primary-dark: #072247;
+    --primary-blue: #1e3a8a;
+    --accent-blue: #2563eb;
+    --light-blue: #3b82f6;
+    --lighter-blue: #60a5fa;
+    
+    /* Colores de fondo */
+    --bg-dark: #0f172a;
+    --bg-card: #ffffff;
+    --bg-sidebar: #1e293b;
+    --bg-hover: #f8fafc;
+    
+    /* Colores de texto */
+    --text-dark: #1e293b;
+    --text-medium: #475569;
+    --text-light: #64748b;
+    --text-white: #ffffff;
+    
+    /* Colores de estado */
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --info-color: #3b82f6;
+    
+    /* Colores de borde */
+    --border-light: #e2e8f0;
+    --border-medium: #cbd5e1;
+    --border-dark: #475569;
+    
+    /* Efectos visuales */
+    --shadow-soft: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-strong: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+    --glow-blue: 0 0 20px rgba(37, 99, 235, 0.15);
+    
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary-blue) 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+    overflow-x: hidden;
+}
+
+/* Background Animation Mejorado */
+.background-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary-blue) 100%);
+}
+
+.shape {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.08;
+    animation: float 20s infinite ease-in-out;
+    filter: blur(40px);
+}
+
+.shape-1 {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    top: 10%;
+    left: 5%;
+    animation-delay: 0s;
+}
+
+.shape-2 {
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(135deg, #60a5fa, #93c5fd);
+    top: 60%;
+    right: 10%;
+    animation-delay: -7s;
+}
+
+.shape-3 {
+    width: 250px;
+    height: 250px;
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    bottom: 10%;
+    left: 20%;
+    animation-delay: -14s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+    }
+    33% {
+        transform: translateY(-30px) rotate(120deg) scale(1.1);
+    }
+    66% {
+        transform: translateY(20px) rotate(240deg) scale(0.9);
+    }
+}
+
+/* Main Container */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.register-container {
+    width: 100%;
+    max-width: 1200px;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 30px;
+    align-items: start;
+}
+
+/* Form Card - Con mejor contraste */
+.form-card {
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    padding: 40px;
+    box-shadow: var(--shadow-strong);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.form-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-blue), var(--accent-blue), var(--light-blue));
+    background-size: 200% 100%;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.register-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.logo-container {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    box-shadow: var(--glow-blue);
+    position: relative;
+    z-index: 2;
+    background: var(--bg-card);
+}
+
+.logo-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90px;
+    height: 90px;
+    background: var(--accent-blue);
+    border-radius: 50%;
+    filter: blur(15px);
+    opacity: 0.4;
+    z-index: 1;
+    animation: pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+    from { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+    to { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.register-title {
+    color: var(--text-dark);
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.register-subtitle {
+    color: var(--text-medium);
+    font-size: 16px;
+    font-weight: 400;
+}
+
+/* Form Styles Mejorados */
+.register-form {
+    width: 100%;
+}
+
+.form-group {
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.input-container {
+    position: relative;
+    margin-bottom: 5px;
+}
+
+.input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    transition: var(--transition);
+    z-index: 2;
+    font-size: 18px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 16px 16px 16px 52px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-light);
+    border-radius: 10px;
+    color: var(--text-dark);
+    font-size: 16px;
+    font-weight: 400;
+    transition: var(--transition);
+    position: relative;
+    z-index: 1;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background: var(--bg-card);
+    transform: translateY(-2px);
+}
+
+.form-group input::placeholder {
+    color: transparent;
+}
+
+.input-label {
+    position: absolute;
+    left: 52px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 16px;
+    font-weight: 400;
+    transition: var(--transition);
+    pointer-events: none;
+    z-index: 2;
+    background: var(--bg-card);
+    padding: 0 8px;
+}
+
+.form-group input:focus + .input-label,
+.form-group input:not(:placeholder-shown) + .input-label {
+    top: 0;
+    font-size: 13px;
+    color: var(--accent-blue);
+    font-weight: 600;
+    background: linear-gradient(180deg, var(--bg-card) 50%, transparent 50%);
+}
+
+.input-underline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-blue), var(--light-blue));
+    transition: var(--transition);
+    border-radius: 2px;
+}
+
+.form-group input:focus ~ .input-underline {
+    width: 100%;
+}
+
+/* Password Toggle Styles */
+.toggle-password-button {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: var(--transition);
+    z-index: 2;
+}
+
+.toggle-password-button:hover {
+    color: var(--accent-blue);
+    background: var(--bg-hover);
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Password Strength Indicator */
+.password-strength {
+    margin-top: 8px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border-light);
+    overflow: hidden;
+    position: relative;
+}
+
+.password-strength-bar {
+    height: 100%;
+    width: 0%;
+    transition: var(--transition);
+    border-radius: 3px;
+}
+
+.password-strength.weak .password-strength-bar {
+    background: linear-gradient(90deg, var(--error-color), #f97316);
+    width: 33%;
+}
+
+.password-strength.medium .password-strength-bar {
+    background: linear-gradient(90deg, var(--warning-color), #eab308);
+    width: 66%;
+}
+
+.password-strength.strong .password-strength-bar {
+    background: linear-gradient(90deg, var(--success-color), #22c55e);
+    width: 100%;
+}
+
+.password-strength-text {
+    font-size: 12px;
+    margin-top: 6px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+/* Password Requirements */
+.password-requirements {
+    margin-top: 15px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-blue);
+    box-shadow: var(--shadow-soft);
+}
+
+.password-requirements h4 {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.requirement {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: var(--text-light);
+    transition: var(--transition);
+}
+
+.requirement i {
+    margin-right: 8px;
+    font-size: 10px;
+    width: 14px;
+    transition: var(--transition);
+}
+
+.requirement.valid {
+    color: var(--success-color);
+    font-weight: 500;
+}
+
+.requirement.valid i {
+    color: var(--success-color);
+}
+
+.requirement.invalid {
+    color: var(--text-light);
+}
+
+.requirement.invalid i {
+    color: var(--text-light);
+}
+
+.form-help {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-light);
+    font-weight: 400;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+/* Botones Mejorados */
+.btn {
+    padding: 14px 28px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-secondary {
+    background: var(--bg-card);
+    color: var(--text-medium);
+    border: 2px solid var(--border-light);
+    box-shadow: var(--shadow-soft);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+    color: white;
+    box-shadow: var(--shadow-medium);
+    position: relative;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-strong);
+    background: linear-gradient(135deg, var(--accent-blue), var(--light-blue));
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Info Card Mejorada */
+.info-card {
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    box-shadow: var(--shadow-strong);
+    position: sticky;
+    top: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.info-card h3 {
+    color: var(--text-dark);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.info-card h3 i {
+    background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.info-card ul {
+    list-style: none;
+}
+
+.info-card li {
+    color: var(--text-medium);
+    margin-bottom: 14px;
+    padding-left: 24px;
+    position: relative;
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 400;
+}
+
+.info-card li:before {
+    content: '✓';
+    color: var(--success-color);
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Messages Mejorados */
+.error-message {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.02));
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: var(--error-color);
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    display: none;
+    border-left: 4px solid var(--error-color);
+    box-shadow: var(--shadow-soft);
+}
+
+.success-message {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: var(--success-color);
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    display: none;
+    border-left: 4px solid var(--success-color);
+    box-shadow: var(--shadow-soft);
+}
+
+/* Button Loader */
+.button-loader {
+    display: none;
+    margin-left: 8px;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(-20px) scale(0.95); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
+
+.form-card, .info-card {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .register-container {
+        grid-template-columns: 1fr;
+        max-width: 600px;
+    }
+    
+    .info-card {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-container {
+        padding: 15px;
+    }
+    
+    .form-card {
+        padding: 30px 20px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .register-title {
+        font-size: 24px;
+    }
+    
+    .shape {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-card {
+        padding: 25px 15px;
+    }
+    
+    .info-card {
+        padding: 20px 15px;
+    }
+    
+    .register-title {
+        font-size: 22px;
+    }
+}

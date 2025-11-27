@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="theme-color" content="#1a365d">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Mantenimientos | Gestion Servibarras</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/maintenance-register.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="page-title">Registro de Mantenimientos</h1>
+            <a href="/dashboard" class="btn btn-back">
+                <i class="fas fa-arrow-left"></i> Volver al Dashboard
+            </a>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+
+        <div class="card">
+            <h2>Información del Mantenimiento</h2>
+            
+            <form id="mantenimiento-form">
+                <div class="form-grid">
+                    <div class="form-section">
+                        <h3><i class="fas fa-info-circle"></i> Datos Básicos</h3>
+                        
+                        <div class="form-group">
+                            <label for="mantenimiento-tipo" class="required">Tipo de Mantenimiento</label>
+                            <select id="mantenimiento-tipo" required>
+                                <option value="">Seleccione el tipo</option>
+                                <option value="Preventivo">Preventivo</option>
+                                <option value="Correctivo">Correctivo</option>
+                                <option value="Predictivo">Predictivo</option>
+                                <option value="Calibración">Calibración</option>
+                                <option value="Actualización">Actualización</option>
+                                <option value="Limpieza">Limpieza</option>
+                                <option value="Revisión">Revisión</option>
+                                <option value="Reparación">Reparación</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="mantenimiento-fecha" class="required">Fecha del Mantenimiento</label>
+                            <input type="date" id="mantenimiento-fecha" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="mantenimiento-tecnico" class="required">Técnico Responsable</label>
+                            <select id="mantenimiento-tecnico" required>
+                                <option value="">Seleccione el técnico</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3><i class="fas fa-laptop"></i> Dispositivo</h3>
+                        
+                        <div class="form-group">
+                            <label for="mantenimiento-dispositivo" class="required">Dispositivo</label>
+                            <select id="mantenimiento-dispositivo" required>
+                                <option value="">Seleccione dispositivo</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="mantenimiento-repuesto">Repuesto Utilizado</label>
+                            <select id="mantenimiento-repuesto">
+                                <option value="">Seleccione repuesto (opcional)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="mantenimiento-estado">Estado del Mantenimiento</label>
+                            <select id="mantenimiento-estado">
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="En Progreso">En Progreso</option>
+                                <option value="Completado">Completado</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fas fa-file-alt"></i> Descripción del Trabajo</h3>
+                    
+                    <div class="form-group">
+                        <label for="mantenimiento-descripcion" class="required">Descripción del Mantenimiento</label>
+                        <textarea id="mantenimiento-descripcion" required 
+                                  placeholder="Describa detalladamente el trabajo realizado..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mantenimiento-observaciones">Observaciones y Recomendaciones</label>
+                        <textarea id="mantenimiento-observaciones" 
+                                  placeholder="Observaciones adicionales o recomendaciones..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">
+                        <i class="fas fa-save"></i> Registrar Mantenimiento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Variables globales
+        const form = document.getElementById('mantenimiento-form');
+        const saveBtn = document.getElementById('saveBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const dispositivoSelect = document.getElementById('mantenimiento-dispositivo');
+        const repuestoSelect = document.getElementById('mantenimiento-repuesto');
+        const tecnicoSelect = document.getElementById('mantenimiento-tecnico');
+        const estadoSelect = document.getElementById('mantenimiento-estado');
+
+        let dispositivosData = [];
+        let repuestosData = [];
+        let tecnicosData = [];
+
+        // Inicializar aplicación
+        init();
+
+        async function init() {
+            showStatus('info', '🔄 Inicializando sistema de mantenimientos...');
+            
+            await Promise.all([
+                cargarTecnicos(),
+                cargarDispositivos(),
+                cargarRepuestos()
+            ]);
+            
+            setDefaultDate();
+            setupEventListeners();
+            
+            showStatus('success', '✅ Sistema listo. Puede registrar mantenimientos.');
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        // Cargar técnicos desde la base de datos
+        async function cargarTecnicos() {
+            try {
+                const response = await fetch('/api/mantenimientos/lista/tecnicos');
+                
+                if (response.ok) {
+                    tecnicosData = await response.json();
+                    populateTecnicosSelect();
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error cargando técnicos:', error);
+                showStatus('error', 'Error al cargar la lista de técnicos');
+            }
+        }
+
+        // Llenar select de técnicos
+        function populateTecnicosSelect() {
+            tecnicoSelect.innerHTML = '<option value="">Seleccione el técnico</option>';
+            
+            if (tecnicosData.length === 0) {
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "No hay técnicos disponibles";
+                tecnicoSelect.appendChild(option);
+                return;
+            }
+            
+            tecnicosData.forEach(tecnico => {
+                const option = document.createElement('option');
+                option.value = tecnico.id;
+                option.textContent = `${tecnico.nombre} (${tecnico.cedula})`;
+                if (tecnico.correo) {
+                    option.textContent += ` - ${tecnico.correo}`;
+                }
+                tecnicoSelect.appendChild(option);
+            });
+        }
+
+        // Cargar dispositivos - SOLO ETIQUETADORAS Y READERS
+        async function cargarDispositivos() {
+            try {
+                console.log('🔄 Cargando dispositivos desde API...');
+                const response = await fetch('/api/mantenimientos/lista/dispositivos');
+                
+                if (response.ok) {
+                    dispositivosData = await response.json();
+                    console.log('✅ Dispositivos cargados:', dispositivosData);
+                    populateDispositivosSelect();
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error cargando dispositivos:', error);
+                showStatus('error', 'Error al cargar los dispositivos');
+            }
+        }
+
+        // Llenar select de dispositivos
+        function populateDispositivosSelect() {
+            dispositivoSelect.innerHTML = '<option value="">Seleccione dispositivo</option>';
+            
+            if (dispositivosData.length === 0) {
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "No hay dispositivos disponibles";
+                dispositivoSelect.appendChild(option);
+                return;
+            }
+            
+            // Ordenar dispositivos por ubicación y tipo
+            dispositivosData.sort((a, b) => {
+                if (a.tipo_display !== b.tipo_display) {
+                    return a.tipo_display.localeCompare(b.tipo_display);
+                }
+                return (a.ubicacion || '').localeCompare(b.ubicacion || '');
+            });
+            
+            dispositivosData.forEach(dispositivo => {
+                const option = document.createElement('option');
+                option.value = dispositivo.id_unico;
+                
+                let texto = `${dispositivo.tipo_display} - ${dispositivo.ubicacion || 'Sin ubicación'}`;
+                if (dispositivo.ip) texto += ` - IP: ${dispositivo.ip}`;
+                if (dispositivo.serial) texto += ` - S/N: ${dispositivo.serial}`;
+                if (dispositivo.nombre && dispositivo.nombre !== dispositivo.tipo_display) {
+                    texto += ` - ${dispositivo.nombre}`;
+                }
+                
+                option.textContent = texto;
+                option.setAttribute('data-tipo', dispositivo.tipo_tabla);
+                option.setAttribute('data-id-original', dispositivo.id_original);
+                dispositivoSelect.appendChild(option);
+
+                console.log(`📋 Opción agregada:`, {
+                    value: option.value,
+                    text: option.textContent,
+                    tipo: option.getAttribute('data-tipo')
+                });
+            });
+
+            console.log(`✅ ${dispositivosData.length} dispositivos cargados`);
+        }
+
+        // Cargar repuestos
+        async function cargarRepuestos() {
+            try {
+                const response = await fetch('/api/mantenimientos/lista/repuestos');
+                
+                if (response.ok) {
+                    repuestosData = await response.json();
+                    populateRepuestosSelect();
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error cargando repuestos:', error);
+            }
+        }
+
+        // Llenar select de repuestos
+        function populateRepuestosSelect() {
+            repuestoSelect.innerHTML = '<option value="">Seleccione repuesto (opcional)</option>';
+            
+            if (repuestosData.length === 0) {
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "No hay repuestos disponibles";
+                repuestoSelect.appendChild(option);
+                return;
+            }
+            
+            // Ordenar repuestos por nombre
+            repuestosData.sort((a, b) => a.nombre.localeCompare(b.nombre));
+            
+            repuestosData.forEach(repuesto => {
+                const option = document.createElement('option');
+                option.value = repuesto.id;
+                
+                // Mostrar información de stock
+                let stockInfo = `Stock: ${repuesto.cantidad}`;
+                if (repuesto.cantidad === 0) {
+                    stockInfo = 'AGOTADO';
+                    option.style.color = '#e53e3e';
+                } else if (repuesto.cantidad <= repuesto.stock_minimo) {
+                    stockInfo = `Stock bajo: ${repuesto.cantidad}`;
+                    option.style.color = '#d69e2e';
+                }
+                
+                option.textContent = `${repuesto.nombre} (${repuesto.codigo}) - ${stockInfo}`;
+                option.dataset.stock = repuesto.cantidad;
+                
+                repuestoSelect.appendChild(option);
+            });
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Cambio en dispositivo específico - DEBUG
+            dispositivoSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                console.log('🔧 Dispositivo seleccionado:', {
+                    value: this.value,
+                    text: selectedOption?.textContent,
+                    tipo: selectedOption?.getAttribute('data-tipo')
+                });
+            });
+
+            // Cambio en repuesto para mostrar stock
+            repuestoSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption && selectedOption.dataset.stock) {
+                    const stock = parseInt(selectedOption.dataset.stock);
+                    if (stock === 0) {
+                        showStatus('warning', '⚠️ Este repuesto está agotado. Considere seleccionar otro.');
+                    } else if (stock <= 5) {
+                        showStatus('warning', `⚠️ Stock bajo: ${stock} unidades disponibles.`);
+                    }
+                }
+            });
+
+            // ✅ CORREGIDO: Guardar mantenimiento con validación mejorada
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await guardarMantenimiento();
+            });
+
+            // Cancelar
+            cancelBtn.addEventListener('click', function() {
+                if (confirm('¿Está seguro que desea cancelar el registro? Los datos no guardados se perderán.')) {
+                    resetForm();
+                    showStatus('info', 'Registro cancelado. El formulario ha sido reiniciado.');
+                }
+            });
+
+            // Validación en tiempo real
+            form.addEventListener('input', function(e) {
+                if (e.target.hasAttribute('required') && e.target.value.trim()) {
+                    e.target.style.borderColor = 'var(--border-color)';
+                }
+            });
+        }
+
+        // ✅ CORREGIDO: Guardar mantenimiento con validación mejorada
+        async function guardarMantenimiento() {
+            try {
+                if (!validarFormulario()) {
+                    return;
+                }
+
+                setLoadingState(true);
+                
+                const formData = obtenerDatosFormulario();
+                
+                console.log('📤 Enviando datos del formulario:', formData);
+
+                const response = await fetch('/api/mantenimientos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('success', 
+                        `✅ Mantenimiento registrado exitosamente.<br>
+                         <strong>ID:</strong> ${result.mantenimientoId || result.data?.id}<br>
+                         <strong>Tipo:</strong> ${formData.tipo}<br>
+                         <strong>Fecha:</strong> ${formData.fecha}`);
+                    
+                    setTimeout(() => {
+                        resetForm();
+                        // Redirigir al dashboard después de éxito
+                        window.location.href = '/dashboard';
+                    }, 3000);
+                } else {
+                    throw new Error(result.message || 'Error al registrar el mantenimiento');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('error', `❌ ${error.message || 'Error al conectar con el servidor'}`);
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        // ✅ CORREGIDO: Validar formulario con chequeo de dispositivo
+        function validarFormulario() {
+            const requiredInputs = form.querySelectorAll('[required]');
+            let isValid = true;
+
+            // Validar campos requeridos
+            requiredInputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.style.borderColor = 'var(--error-color)';
+                    isValid = false;
+                    
+                    // Scroll al primer error
+                    if (isValid === false) {
+                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        input.focus();
+                    }
+                }
+            });
+
+            // ✅ VALIDACIÓN ESPECÍFICA PARA DISPOSITIVO
+            const dispositivoValue = dispositivoSelect.value;
+            console.log('🔍 Validando dispositivo seleccionado:', dispositivoValue);
+            
+            if (!dispositivoValue || dispositivoValue === '' || dispositivoValue === 'undefined') {
+                dispositivoSelect.style.borderColor = 'var(--error-color)';
+                isValid = false;
+                showStatus('error', '❌ Debe seleccionar un dispositivo válido');
+                dispositivoSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                dispositivoSelect.focus();
+            } else {
+                dispositivoSelect.style.borderColor = '';
+            }
+
+            if (!isValid) {
+                showStatus('error', '❌ Por favor complete todos los campos obligatorios');
+            }
+
+            return isValid;
+        }
+
+        // ✅ CORREGIDO: Obtener datos del formulario
+        function obtenerDatosFormulario() {
+            const dispositivoValue = dispositivoSelect.value;
+            const selectedOption = dispositivoSelect.options[dispositivoSelect.selectedIndex];
+            const dispositivoTipo = selectedOption ? selectedOption.getAttribute('data-tipo') : '';
+
+            console.log('🔍 Datos del dispositivo seleccionado:', {
+                value: dispositivoValue,
+                tipo: dispositivoTipo,
+                selectedOption: selectedOption ? selectedOption.textContent : 'N/A',
+                idOriginal: selectedOption ? selectedOption.getAttribute('data-id-original') : 'N/A'
+            });
+
+            // ✅ VERIFICACIÓN CRÍTICA: Asegurar que el valor del dispositivo es correcto
+            if (!dispositivoValue || dispositivoValue === 'undefined') {
+                throw new Error('El dispositivo seleccionado no es válido');
+            }
+
+            return {
+                tipo: document.getElementById('mantenimiento-tipo').value,
+                fecha: document.getElementById('mantenimiento-fecha').value,
+                id_usuarios: document.getElementById('mantenimiento-tecnico').value,
+                id_dispositivo: dispositivoValue, // ✅ Ya viene con prefijo (etiquetadora_9)
+                id_repuesto: document.getElementById('mantenimiento-repuesto').value || null,
+                descripcion: document.getElementById('mantenimiento-descripcion').value,
+                observaciones: document.getElementById('mantenimiento-observaciones').value,
+                estado: document.getElementById('mantenimiento-estado').value,
+                dispositivo_tipo: dispositivoTipo // ✅ Para ayudar al backend
+            };
+        }
+
+        // Resetear formulario
+        function resetForm() {
+            form.reset();
+            setDefaultDate();
+            
+            // Restablecer estilos
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.style.borderColor = 'var(--border-color)';
+                input.style.color = '';
+            });
+        }
+
+        // Establecer fecha actual por defecto
+        function setDefaultDate() {
+            const today = new Date().toISOString().split('T')[0];
+            const fechaInput = document.getElementById('mantenimiento-fecha');
+            fechaInput.value = today;
+        }
+
+        // Mostrar mensajes de estado
+        function showStatus(type, message) {
+            statusMessage.innerHTML = message;
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.style.display = 'block';
+            
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Estado de carga
+        function setLoadingState(loading) {
+            if (loading) {
+                saveBtn.classList.add('loading');
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fas fa-spinner"></i> Procesando...';
+            } else {
+                saveBtn.classList.remove('loading');
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Registrar Mantenimiento';
+            }
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "short_name": "Gestion WMS",
+  "name": "Sistema de Gestión WMS Mizooco",
+  "icons": [
+    {
+      "src": "img/logo1.jpg",
+      "sizes": "64x64",
+      "type": "image/jpeg"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
