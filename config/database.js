@@ -71,11 +71,24 @@ const initializeDatabase = async () => {
                 console.log('ℹ️ Tabla usuarios existe pero falta columna `contrasena`. La crearé.');
                 await pool.query(`ALTER TABLE usuarios ADD COLUMN contrasena VARCHAR(255);`);
 
-                if (hasPassword) {
+                    if (hasPassword) {
                     // Copiar valores desde password -> contrasena (sin eliminar password)
                     console.log('🔁 Copiando valores desde `password` a `contrasena`...');
                     const copyResult = await pool.query(`UPDATE usuarios SET contrasena = password WHERE contrasena IS NULL AND password IS NOT NULL RETURNING id, correo`);
                     console.log(`✅ Filas copiadas: ${copyResult.rowCount}`);
+
+                    // Si la columna password existe y tiene NOT NULL constraint esto puede romper
+                    // posteriores INSERTs que no incluyan 'password'. Hacemos la columna nullable para seguridad.
+                    try {
+                        const nullableCheck = await pool.query(`SELECT is_nullable FROM information_schema.columns WHERE table_name='usuarios' AND column_name='password'`);
+                        if (nullableCheck.rows.length > 0 && nullableCheck.rows[0].is_nullable === 'NO') {
+                            console.log('ℹ️ La columna `password` estaba NOT NULL — cambiando a NULLABLE para evitar violaciones de constraint');
+                            await pool.query(`ALTER TABLE usuarios ALTER COLUMN password DROP NOT NULL`);
+                            console.log('✅ Columna `password` ahora es NULLABLE');
+                        }
+                    } catch (colErr) {
+                        console.error('❌ Error intentando hacer password NULLABLE:', colErr.message);
+                    }
                 }
             }
         } catch (mErr) {

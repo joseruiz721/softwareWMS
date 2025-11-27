@@ -44,6 +44,18 @@ async function createTables() {
           console.log('🔁 Copiando valores desde `password` a `contrasena`...');
           const copyRes = await client.query(`UPDATE usuarios SET contrasena = password WHERE contrasena IS NULL AND password IS NOT NULL RETURNING id, correo`);
           console.log(`✅ Filas copiadas: ${copyRes.rowCount}`);
+
+          // Si la columna password es NOT NULL, hacerla NULLABLE para evitar errores en la inserción de admin
+          try {
+            const nullableCheck = await client.query(`SELECT is_nullable FROM information_schema.columns WHERE table_name='usuarios' AND column_name='password'`);
+            if (nullableCheck.rows.length > 0 && nullableCheck.rows[0].is_nullable === 'NO') {
+              console.log('ℹ️ La columna `password` estaba NOT NULL — cambiando a NULLABLE para evitar violaciones de constraint');
+              await client.query(`ALTER TABLE usuarios ALTER COLUMN password DROP NOT NULL`);
+              console.log('✅ Columna `password` ahora es NULLABLE');
+            }
+          } catch (merr) {
+            console.error('❌ Error cambiando password a NULLABLE:', merr.message);
+          }
         }
       }
     } catch (err) {
