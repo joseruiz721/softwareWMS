@@ -1,104 +1,173 @@
--- Esquema de Base de Datos Convertido para PostgreSQL
+-- schema.sql - Esquema completo para Sistema WMS Mizooco
+-- Ejecutar este script en Railway PostgreSQL para crear todas las tablas
 
-BEGIN;
-
--- Tabla de Auditoría
-CREATE TABLE "auditoria" (
-  "id" SERIAL PRIMARY KEY,
-  "tabla_afectada" VARCHAR(255) NOT NULL,
-  "accion" VARCHAR(10) NOT NULL CHECK (accion IN ('INSERT', 'UPDATE', 'DELETE')),
-  "registro_id" INTEGER NOT NULL,
-  "usuario_id" INTEGER NOT NULL,
-  "fecha" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "detalles" TEXT
+-- Tabla de usuarios
+CREATE TABLE IF NOT EXISTS usuarios (
+    id SERIAL PRIMARY KEY,
+    cedula VARCHAR(20) UNIQUE NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'user',
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reset_token VARCHAR(255),
+    reset_token_expires TIMESTAMP
 );
 
--- Tabla de Usuarios
-CREATE TABLE "usuarios" (
-  "id" SERIAL PRIMARY KEY,
-  "cedula" VARCHAR(255) NOT NULL,
-  "nombre" VARCHAR(255) NOT NULL,
-  "correo" VARCHAR(255) NOT NULL UNIQUE,
-  "contrasena" VARCHAR(255) NOT NULL
+-- Tabla para sesiones (requerida por connect-pg-simple)
+CREATE TABLE IF NOT EXISTS session (
+    sid VARCHAR PRIMARY KEY,
+    sess JSON NOT NULL,
+    expire TIMESTAMP(6) NOT NULL
 );
 
--- Tabla de Roles
-CREATE TABLE "roles" (
-  "id" SERIAL PRIMARY KEY,
-  "nombre" VARCHAR(255) NOT NULL
+-- Tabla de ordenadores
+CREATE TABLE IF NOT EXISTS ordenadores (
+    id SERIAL PRIMARY KEY,
+    ip VARCHAR(45),
+    ubicacion VARCHAR(100),
+    activo VARCHAR(50),
+    serial VARCHAR(100) UNIQUE,
+    estado VARCHAR(50),
+    fecha_ingreso DATE,
+    observaciones TEXT,
+    id_usuario_responsable INTEGER REFERENCES usuarios(id),
+    marca VARCHAR(100),
+    activo_fijo VARCHAR(100)
 );
 
--- Tabla de Dispositivos
-CREATE TABLE "dispositivos" (
-  "id" SERIAL PRIMARY KEY,
-  "tipo" VARCHAR(255) NOT NULL,
-  "marca" VARCHAR(255) NOT NULL,
-  "modelo" VARCHAR(255) NOT NULL,
-  "direccion_ip" VARCHAR(255),
-  "puerto" VARCHAR(255),
-  "usuario" VARCHAR(255),
-  "contrasena" VARCHAR(255),
-  "ubicacion" VARCHAR(255) NOT NULL,
-  "usuario_id" INTEGER NOT NULL,
-  CONSTRAINT "fk_usuario" FOREIGN KEY ("usuario_id") REFERENCES "usuarios"("id") ON DELETE CASCADE ON UPDATE CASCADE
+-- Tabla de access point
+CREATE TABLE IF NOT EXISTS access_point (
+    id SERIAL PRIMARY KEY,
+    ip VARCHAR(45),
+    ubicacion VARCHAR(100),
+    serial VARCHAR(100) UNIQUE,
+    modelo VARCHAR(100),
+    version VARCHAR(100),
+    arquitectura VARCHAR(100),
+    mac VARCHAR(100),
+    estado VARCHAR(50),
+    fecha_ingreso DATE,
+    observacion TEXT,
+    id_usuarios_responsable INTEGER REFERENCES usuarios(id),
+    activo_fijo VARCHAR(100)
 );
 
--- Crear índices para optimizar búsquedas en dispositivos
-CREATE INDEX "idx_dispositivos_tipo_marca" ON "dispositivos"("tipo", "marca");
-CREATE UNIQUE INDEX "idx_dispositivos_direccion_ip" ON "dispositivos"("direccion_ip");
-
-
--- Tabla de Servicios
-CREATE TABLE "servicios" (
-  "id" SERIAL PRIMARY KEY,
-  "nombre" VARCHAR(100) NOT NULL,
-  "descripcion" TEXT NOT NULL,
-  "estado" VARCHAR(10) DEFAULT 'Activo' CHECK (estado IN ('Activo', 'Inactivo')),
-  "fecha_registro" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- Tabla de readers
+CREATE TABLE IF NOT EXISTS readers (
+    id SERIAL PRIMARY KEY,
+    ip VARCHAR(45),
+    ubicacion VARCHAR(100),
+    no_maquina VARCHAR(100),
+    serial VARCHAR(100) UNIQUE,
+    mac VARCHAR(100),
+    estado VARCHAR(50),
+    fecha_ingreso DATE,
+    observaciones TEXT,
+    id_usuario_responsable INTEGER REFERENCES usuarios(id),
+    activo_fijo VARCHAR(100)
 );
 
--- Tabla de Usuario-Roles (Relación muchos a muchos)
-CREATE TABLE "usuario_roles" (
-  "usuario_id" INTEGER NOT NULL,
-  "rol_id" INTEGER NOT NULL,
-  PRIMARY KEY ("usuario_id", "rol_id"),
-  CONSTRAINT "fk_usuario_roles_usuario" FOREIGN KEY ("usuario_id") REFERENCES "usuarios"("id") ON DELETE CASCADE,
-  CONSTRAINT "fk_usuario_roles_rol" FOREIGN KEY ("rol_id") REFERENCES "roles"("id") ON DELETE CASCADE
+-- Tabla de etiquetadoras
+CREATE TABLE IF NOT EXISTS etiquetadoras (
+    id SERIAL PRIMARY KEY,
+    ip VARCHAR(45),
+    ubicacion VARCHAR(100),
+    activo VARCHAR(50),
+    serial VARCHAR(100) UNIQUE,
+    modelo VARCHAR(100),
+    serial_aplicador VARCHAR(100),
+    mac VARCHAR(100),
+    estado VARCHAR(50),
+    fecha_ingreso DATE,
+    observaciones TEXT,
+    id_usuarios_responsable INTEGER REFERENCES usuarios(id),
+    activo_fijo VARCHAR(100)
 );
 
+-- Tabla de tablets
+CREATE TABLE IF NOT EXISTS tablets (
+    id SERIAL PRIMARY KEY,
+    ip VARCHAR(45),
+    ubicacion VARCHAR(100),
+    no_maquina VARCHAR(100),
+    activo VARCHAR(50),
+    serial VARCHAR(100) UNIQUE,
+    estado VARCHAR(50),
+    fecha_ingreso DATE,
+    observaciones TEXT,
+    id_usuario_responsable INTEGER REFERENCES usuarios(id),
+    activo_fijo VARCHAR(100)
+);
 
--- Volcado de datos para la tabla `usuarios`
-INSERT INTO "usuarios" ("id", "cedula", "nombre", "correo", "contrasena") VALUES
-(1, '80250899', 'jose raul ruiz real', 'joseraulruizreal@gmail.com', '$2b$10$w28hy1jr7zOGXlMwB1/QaurHomJ8b20DlHlzM9NniN0odQr.mb4em'),
-(2, '1010101010', 'Camilo Garcia', 'camilo@gmail.com', '$2b$10$2WVfaLLrv5bmwR.SohaaaexgyQPkIN3kyykw1bUuVWrwPmKHYuDOC'),
-(3, '6666666', 'maria cardona', 'maria@gmail.com', '$2b$10$rQJBwpAD9lWUV/eZq9p/W.t23j1f3PtwcIqjPna83hz3sDvAOKqzy');
+-- Tabla de lectores QR
+CREATE TABLE IF NOT EXISTS lectores_qr (
+    id SERIAL PRIMARY KEY,
+    ubicacion VARCHAR(100),
+    activo VARCHAR(50),
+    modelo VARCHAR(100),
+    estado VARCHAR(50),
+    fecha_ingreso DATE,
+    observaciones TEXT,
+    id_usuarios_responsable INTEGER REFERENCES usuarios(id),
+    activo_fijo VARCHAR(100)
+);
 
--- Volcado de datos para la tabla `dispositivos`
-INSERT INTO "dispositivos" ("id", "tipo", "marca", "modelo", "direccion_ip", "puerto", "usuario", "contrasena", "ubicacion", "usuario_id") VALUES
-(1, 'camara analoga', 'dahua', 'ds252525', '10.10.5.5', '8080', 'jose raul', '1202', 'OFICINA', 1),
-(2, 'Camara Analoga', 'hikvision', 'dc525356', '10.10.5.20', '8080', '', '', 'habitacion', 1),
-(3, 'NVR', 'hikvision', 'dc606060', '10.10.5.30', '8080', '', '', 'sala', 1),
-(4, 'Camara Analoga', 'dahua', 'dc525412', '10.10.5.60', '8080', '', '', 'casa', 1),
-(5, 'Camara Analoga', 'hikvision', 'ds25252525', '10.10.5.40', '8080', '', '', 'ingreso', 1),
-(6, 'Alarma', 'dahua', 'decf14141414', '10.10.5.24', '8081', '', '', 'patio', 1),
-(7, 'Sensor de Movimiento', 'hikvision', 'dchrjejfff', '', '', '', '', 'entrada', 1),
-(8, 'Camara IP', 'hikvision', 'ds525452545', '10.10.5.75', '8080', 'jose', '', 'casa', 1),
-(9, 'NVR', 'hikvision', 'ds525452540', '10.10.5.80', '8081', 'jose', '', 'cosina', 1),
-(10, 'Alarma', 'hikvision', 'ds525452548', '10.10.5.73', '8081', 'jose', '1202', 'jardin', 1),
-(11, 'Camara Analoga', 'hikvision', 'ds52525452', '10.10.5.62', '8081', 'jose', '', 'casa', 1),
-(12, 'Camara IP', 'dahua', 'ds525452550', '10.10.5.38', '8081', 'jose', '', 'casa', 1),
-(13, 'Camara IP', 'dahua', 'ds525452551', '10.10.5.41', '8081', 'jose', '', 'casa', 1);
+-- Tabla de repuestos
+CREATE TABLE IF NOT EXISTS repuestos (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    codigo VARCHAR(50) UNIQUE,
+    cantidad INTEGER DEFAULT 0,
+    stock_minimo INTEGER DEFAULT 5,
+    ubicacion VARCHAR(100),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Volcado de datos para la tabla `servicios`
-INSERT INTO "servicios" ("id", "nombre", "descripcion", "estado", "fecha_registro") VALUES
-(1, 'Sistema de Alarmas', 'todo el servicio', 'Activo', '2025-02-25 04:59:06'),
-(2, 'Sistema de Alarmas', 'toda la casa', 'Activo', '2025-03-14 15:38:19'),
-(3, 'Sistema de Sensores', 'Sensores en la empresa', 'Activo', '2025-03-19 14:00:39');
+-- Tabla de mantenimientos
+CREATE TABLE IF NOT EXISTS mantenimientos (
+    id SERIAL PRIMARY KEY,
+    descripcion TEXT NOT NULL,
+    tipo VARCHAR(50),
+    estado VARCHAR(50),
+    fecha DATE,
+    id_usuarios INTEGER REFERENCES usuarios(id),
+    id_dispositivo INTEGER,
+    tipo_dispositivo VARCHAR(50),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Reiniciar las secuencias de los IDs para que los nuevos registros no choquen con los existentes
--- SELECT setval(pg_get_serial_sequence('usuarios', 'id'), COALESCE(max(id), 1), max(id) IS NOT null) FROM usuarios;
--- SELECT setval(pg_get_serial_sequence('dispositivos', 'id'), COALESCE(max(id), 1), max(id) IS NOT null) FROM dispositivos;
--- SELECT setval(pg_get_serial_sequence('servicios', 'id'), COALESCE(max(id), 1), max(id) IS NOT null) FROM servicios;
+-- Insertar usuario administrador por defecto
+-- Contraseña: 'password' (hasheada con bcrypt)
+INSERT INTO usuarios (cedula, nombre, correo, password, role) 
+VALUES (
+    '12345678', 
+    'Administrador Principal', 
+    'joseraulruizreal@gmail.com', 
+    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 
+    'admin'
+) ON CONFLICT (correo) DO NOTHING;
 
+-- Insertar algunos repuestos de ejemplo
+INSERT INTO repuestos (nombre, codigo, cantidad, stock_minimo, ubicacion) VALUES
+('Memoria RAM 8GB DDR4', 'RAM-8GB-DDR4', 25, 5, 'Almacén A'),
+('Disco SSD 500GB', 'SSD-500GB', 15, 3, 'Almacén B'),
+('Teclado USB', 'TEC-USB', 30, 10, 'Almacén C'),
+('Mouse Óptico', 'MS-OPT', 40, 15, 'Almacén A')
+ON CONFLICT (codigo) DO NOTHING;
 
-COMMIT;
+-- Crear índices para mejor performance
+CREATE INDEX IF NOT EXISTS idx_usuarios_correo ON usuarios(correo);
+CREATE INDEX IF NOT EXISTS idx_usuarios_cedula ON usuarios(cedula);
+CREATE INDEX IF NOT EXISTS idx_session_expire ON session(expire);
+CREATE INDEX IF NOT EXISTS idx_repuestos_codigo ON repuestos(codigo);
+CREATE INDEX IF NOT EXISTS idx_mantenimientos_fecha ON mantenimientos(fecha);
+
+-- Mensaje de confirmación
+DO $$ 
+BEGIN
+    RAISE NOTICE '✅ Esquema de base de datos creado exitosamente';
+    RAISE NOTICE '📊 Tablas creadas: usuarios, session, ordenadores, access_point, readers, etiquetadoras, tablets, lectores_qr, repuestos, mantenimientos';
+    RAISE NOTICE '👤 Usuario administrador: joseraulruizreal@gmail.com / password';
+END $$;
