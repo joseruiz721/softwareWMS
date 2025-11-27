@@ -1,4 +1,4 @@
-// server.js - VERSIÓN COMPLETA ACTUALIZADA PARA RAILWAY
+// server.js - VERSIÓN COMPLETA CORREGIDA PARA RAILWAY
 require('dotenv').config(); 
 
 const express = require("express");
@@ -17,6 +17,14 @@ const {
     checkAuthStatus 
 } = require('./middleware/auth');
 const Logger = require('./config/logger');
+
+// Importar rutas - MOVIDO ARRIBA DE LAS FUNCIONES
+const authRoutes = require('./routes/auth');
+const usuarioRoutes = require('./routes/usuarios');
+const dispositivoRoutes = require('./routes/dispositivos');
+const repuestoRoutes = require('./routes/repuestos');
+const mantenimientoRoutes = require('./routes/mantenimientos');
+const dashboardRoutes = require('./routes/dashboard');
 
 // 🔥 VERIFICACIÓN CRÍTICA: Probar conexión a BD al iniciar
 async function initializeServer() {
