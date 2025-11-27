@@ -19,13 +19,70 @@ const connectionConfig = process.env.DATABASE_URL
 
 const pool = new Pool({
     ...connectionConfig,
-    // Configuración de conexión más robusta
     connectionTimeoutMillis: 10000,
     idleTimeoutMillis: 30000,
     max: 20,
-    // Manejo de errores mejorado
     allowExitOnIdle: true
 });
+
+// 🔥 FUNCIÓN CRÍTICA: Crear tablas si no existen
+const initializeDatabase = async () => {
+    try {
+        console.log('🔧 INICIALIZANDO BASE DE DATOS - Creando tablas...');
+        
+        // Crear tabla usuarios
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id SERIAL PRIMARY KEY,
+                cedula VARCHAR(20) UNIQUE NOT NULL,
+                nombre VARCHAR(100) NOT NULL,
+                correo VARCHAR(100) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                role VARCHAR(20) DEFAULT 'user',
+                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                reset_token VARCHAR(255),
+                reset_token_expires TIMESTAMP
+            )
+        `);
+        console.log('✅ Tabla usuarios creada/verificada');
+        
+        // Crear tabla session
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS session (
+                sid VARCHAR PRIMARY KEY,
+                sess JSON NOT NULL,
+                expire TIMESTAMP(6) NOT NULL
+            )
+        `);
+        console.log('✅ Tabla session creada/verificada');
+        
+        // Insertar usuario administrador
+        const result = await pool.query(`
+            INSERT INTO usuarios (cedula, nombre, correo, password, role) 
+            VALUES ($1, $2, $3, $4, $5) 
+            ON CONFLICT (correo) DO NOTHING
+            RETURNING id, nombre, correo, role
+        `, [
+            '12345678',
+            'Administrador', 
+            'joseraulruizreal@gmail.com', 
+            '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+            'admin'
+        ]);
+        
+        if (result.rows.length > 0) {
+            console.log('✅ USUARIO ADMIN CREADO:', result.rows[0]);
+        } else {
+            console.log('ℹ️ Usuario admin ya existía');
+        }
+        
+        console.log('🎉 BASE DE DATOS INICIALIZADA CORRECTAMENTE');
+        return true;
+    } catch (error) {
+        console.error('❌ ERROR INICIALIZANDO BD:', error.message);
+        return false;
+    }
+};
 
 // Verificar conexión a la base de datos al iniciar
 pool.on('connect', () => {
@@ -66,11 +123,14 @@ const queryAsync = async (text, params) => {
 // Función para verificar la conexión a la base de datos
 const testConnection = async () => {
     try {
-        const result = await queryAsync('SELECT NOW() as current_time, version() as version');
+        const result = await queryAsync('SELECT NOW() as current_time');
         console.log('✅ Conexión a BD verificada:', {
-            time: result[0].current_time,
-            version: result[0].version.split(' ').slice(0, 4).join(' ')
+            time: result[0].current_time
         });
+        
+        // 🔥 INICIALIZAR TABLAS AUTOMÁTICAMENTE
+        await initializeDatabase();
+        
         return true;
     } catch (error) {
         console.error('❌ Error conectando a la base de datos:', error.message);
@@ -121,5 +181,6 @@ module.exports = {
     sessionStore,
     queryAsync,
     tiposDispositivos,
-    testConnection
+    testConnection,
+    initializeDatabase
 };
