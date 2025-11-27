@@ -47,12 +47,22 @@ router.post("/registro", async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(pass, 10);
-        
+
+        // Compatibilidad con columna legacy 'password'
+        const cols = await queryAsync("SELECT column_name FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name = 'password'");
+        const hasPasswordCol = cols.length > 0;
+
+        let insertSql, insertParams;
+        if (hasPasswordCol) {
+            insertSql = "INSERT INTO usuarios (cedula, nombre, correo, contrasena, password, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, cedula, nombre, correo, role";
+            insertParams = [ced, nom, correo, hashedPassword, hashedPassword, finalRole];
+        } else {
+            insertSql = "INSERT INTO usuarios (cedula, nombre, correo, contrasena, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, cedula, nombre, correo, role";
+            insertParams = [ced, nom, correo, hashedPassword, finalRole];
+        }
+
         // ⭐ MODIFICADO: Incluir campo role en el INSERT
-        const result = await queryAsync(
-            "INSERT INTO usuarios (cedula, nombre, correo, contrasena, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, cedula, nombre, correo, role",
-            [ced, nom, correo, hashedPassword, finalRole]
-        );
+        const result = await queryAsync(insertSql, insertParams);
 
         const newUser = result[0];
 
@@ -298,6 +308,10 @@ router.put("/perfil", async (req, res) => {
             paramCount++;
         }
 
+        // Check legacy column `password` once
+        const colCheck = await queryAsync("SELECT column_name FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name = 'password'");
+        const hasPasswordCol = colCheck.length > 0;
+
         if (contrasena) {
             if (contrasena.length < 6) {
                 return res.status(400).json({
@@ -306,8 +320,17 @@ router.put("/perfil", async (req, res) => {
                 });
             }
             const hashedPassword = await bcrypt.hash(contrasena, 10);
+            // Always update contrasena
             updates.push(`contrasena = $${paramCount}`);
             values.push(hashedPassword);
+            paramCount++;
+
+            // If legacy password column exists, update it too
+            if (hasPasswordCol) {
+                updates.push(`password = $${paramCount}`);
+                values.push(hashedPassword);
+                paramCount++;
+            }
             paramCount++;
         }
 

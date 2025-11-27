@@ -248,11 +248,23 @@ router.post("/registro", async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(pass, 10);
-        
-        const result = await databaseConfig.queryAsync(
-            "INSERT INTO usuarios (cedula, nombre, correo, contrasena, role, fecha_registro) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id, cedula, nombre, correo, role, fecha_registro",
-            [ced, nom, correo, hashedPassword, finalRole]
+
+        // Compatibilidad con instalaciones legacy que aún tienen la columna `password` (NOT NULL)
+        const passCols = await databaseConfig.queryAsync(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name = 'password'"
         );
+        const hasPasswordCol = passCols.length > 0;
+
+        let insertSql, insertParams;
+        if (hasPasswordCol) {
+            insertSql = "INSERT INTO usuarios (cedula, nombre, correo, contrasena, password, role, fecha_registro) VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING id, cedula, nombre, correo, role, fecha_registro";
+            insertParams = [ced, nom, correo, hashedPassword, hashedPassword, finalRole];
+        } else {
+            insertSql = "INSERT INTO usuarios (cedula, nombre, correo, contrasena, role, fecha_registro) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id, cedula, nombre, correo, role, fecha_registro";
+            insertParams = [ced, nom, correo, hashedPassword, finalRole];
+        }
+
+        const result = await databaseConfig.queryAsync(insertSql, insertParams);
 
         const newUser = result[0];
         console.log('✅ Usuario registrado exitosamente, ID:', newUser.id, '- Rol:', newUser.role);
@@ -330,11 +342,23 @@ router.post("/registro-admin", async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(pass, 10);
-        
-        const result = await databaseConfig.queryAsync(
-            "INSERT INTO usuarios (cedula, nombre, correo, contrasena, role, fecha_registro) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id, cedula, nombre, correo, role, fecha_registro",
-            [ced, nom, correo, hashedPassword, role]
+
+        // Check legacy password column
+        const adminPassCols = await databaseConfig.queryAsync(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name = 'password'"
         );
+        const hasPasswordColAdmin = adminPassCols.length > 0;
+
+        let insertAdminSql, insertAdminParams;
+        if (hasPasswordColAdmin) {
+            insertAdminSql = "INSERT INTO usuarios (cedula, nombre, correo, contrasena, password, role, fecha_registro) VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING id, cedula, nombre, correo, role, fecha_registro";
+            insertAdminParams = [ced, nom, correo, hashedPassword, hashedPassword, role];
+        } else {
+            insertAdminSql = "INSERT INTO usuarios (cedula, nombre, correo, contrasena, role, fecha_registro) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id, cedula, nombre, correo, role, fecha_registro";
+            insertAdminParams = [ced, nom, correo, hashedPassword, role];
+        }
+
+        const result = await databaseConfig.queryAsync(insertAdminSql, insertAdminParams);
 
         const newAdmin = result[0];
         console.log('✅ Administrador registrado exitosamente:', newAdmin.nombre, '- Rol:', newAdmin.role);
@@ -485,10 +509,23 @@ router.post('/reestablecer-pass', async (req, res) => {
         
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        await databaseConfig.queryAsync(
-            "UPDATE usuarios SET contrasena = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2",
-            [hashedPassword, usuario.id]
+        // Si existe la columna legacy `password`, actualizar ambas columnas
+        const resetCols = await databaseConfig.queryAsync(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name = 'password'"
         );
+        const hasPasswordColReset = resetCols.length > 0;
+
+        if (hasPasswordColReset) {
+            await databaseConfig.queryAsync(
+                "UPDATE usuarios SET contrasena = $1, password = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2",
+                [hashedPassword, usuario.id]
+            );
+        } else {
+            await databaseConfig.queryAsync(
+                "UPDATE usuarios SET contrasena = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2",
+                [hashedPassword, usuario.id]
+            );
+        }
 
         console.log('✅ Contraseña actualizada para:', usuario.correo);
 
